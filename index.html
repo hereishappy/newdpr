@@ -260,6 +260,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateCurrentDate();
             initializeAttendanceData();
+            loadPersistedData();
         });
 
         function updateCurrentDate() {
@@ -290,6 +291,32 @@
             }
             if (!measurementData[today]) {
                 measurementData[today] = [];
+            }
+        }
+
+        // Data persistence functions
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+                localStorage.setItem('measurementData', JSON.stringify(measurementData));
+            } catch (error) {
+                console.error('Error saving data to localStorage:', error);
+            }
+        }
+
+        function loadPersistedData() {
+            try {
+                const savedAttendanceData = localStorage.getItem('attendanceData');
+                const savedMeasurementData = localStorage.getItem('measurementData');
+                
+                if (savedAttendanceData) {
+                    attendanceData = JSON.parse(savedAttendanceData);
+                }
+                if (savedMeasurementData) {
+                    measurementData = JSON.parse(savedMeasurementData);
+                }
+            } catch (error) {
+                console.error('Error loading data from localStorage:', error);
             }
         }
 
@@ -381,8 +408,15 @@
             const today = new Date().toDateString();
             
             // Filter workers based on time period and supervisor
-            let workersToShow = workers;
-            if (currentTimePeriod === 'evening') {
+            let workersToShow = [];
+            
+            if (currentTimePeriod === 'morning') {
+                // For morning, show only workers not marked by other supervisors OR marked by current supervisor
+                workersToShow = workers.filter(worker => {
+                    const workerData = attendanceData[today][worker];
+                    return !workerData.markedBy || workerData.markedBy === currentSupervisorName;
+                });
+            } else if (currentTimePeriod === 'evening') {
                 // For evening, only show workers that current supervisor marked as present in morning
                 workersToShow = workers.filter(worker => {
                     const workerData = attendanceData[today][worker];
@@ -390,11 +424,18 @@
                 });
             }
             
-            if (currentTimePeriod === 'evening' && workersToShow.length === 0) {
+            if (workersToShow.length === 0) {
+                const message = currentTimePeriod === 'morning' 
+                    ? 'All workers have been assigned to other supervisors'
+                    : 'No workers marked present by you today';
+                const subMessage = currentTimePeriod === 'morning'
+                    ? 'Workers marked by other supervisors are locked'
+                    : 'Switch to morning check-in to mark workers present first';
+                    
                 workersList.innerHTML = `
                     <div class="p-8 text-center text-gray-500">
-                        <p class="text-lg mb-2">No workers marked present by you today</p>
-                        <p class="text-sm">Switch to morning check-in to mark workers present first</p>
+                        <p class="text-lg mb-2">${message}</p>
+                        <p class="text-sm">${subMessage}</p>
                     </div>
                 `;
                 return;
@@ -403,9 +444,25 @@
             workersList.innerHTML = workersToShow.map(worker => {
                 const workerData = attendanceData[today][worker];
                 const isMarked = currentTimePeriod === 'morning' ? workerData.present : (workerData.overtimeHours > 0);
+                const isLockedByOther = workerData.markedBy && workerData.markedBy !== currentSupervisorName;
                 const statusClass = isMarked ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50 active:bg-blue-50';
 
                 if (currentTimePeriod === 'morning') {
+                    // Check if worker is locked by another supervisor
+                    if (isLockedByOther) {
+                        return `
+                            <div class="flex items-center justify-between p-4 bg-gray-100 border-gray-300 opacity-60">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-medium text-gray-500 text-sm sm:text-base truncate">${worker}</h4>
+                                    <p class="text-xs sm:text-sm text-gray-500 mt-1">🔒 Assigned to ${workerData.markedBy}</p>
+                                </div>
+                                <span class="px-3 py-2 bg-gray-400 text-white rounded-lg text-xs sm:text-sm font-medium">
+                                    Locked
+                                </span>
+                            </div>
+                        `;
+                    }
+                    
                     const buttonClass = isMarked ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-blue-600 hover:text-white active:bg-blue-700';
                     const buttonText = isMarked ? 'Present ✓' : 'Mark Present';
 
@@ -413,7 +470,7 @@
                         <div class="flex items-center justify-between p-4 ${statusClass} transition duration-200">
                             <div class="flex-1 min-w-0">
                                 <h4 class="font-medium text-gray-900 text-sm sm:text-base truncate">${worker}</h4>
-                                ${isMarked ? `<p class="text-xs sm:text-sm text-gray-600 mt-1">Marked by ${workerData.markedBy} at ${workerData.morningTime}</p>` : ''}
+                                ${isMarked ? `<p class="text-xs sm:text-sm text-gray-600 mt-1">Marked by you at ${workerData.morningTime}</p>` : ''}
                             </div>
                             <button 
                                 onclick="toggleAttendance('${worker}')" 
@@ -428,7 +485,7 @@
                         <div class="flex items-center justify-between p-4 ${statusClass} transition duration-200">
                             <div class="flex-1 min-w-0">
                                 <h4 class="font-medium text-gray-900 text-sm sm:text-base truncate">${worker}</h4>
-                                ${workerData.overtimeHours > 0 ? `<p class="text-xs sm:text-sm text-gray-600 mt-1">${workerData.overtimeHours} hours overtime - Marked by ${workerData.markedBy} at ${workerData.eveningTime}</p>` : ''}
+                                ${workerData.overtimeHours > 0 ? `<p class="text-xs sm:text-sm text-gray-600 mt-1">${workerData.overtimeHours} hours overtime - Marked by you at ${workerData.eveningTime}</p>` : ''}
                             </div>
                             <div class="flex items-center gap-2">
                                 <input 
@@ -473,6 +530,7 @@
 
             renderWorkersList();
             updateSummary();
+            saveDataToStorage(); // Save data after attendance change
             autoSyncToGoogleSheets(); // Auto-sync after attendance change
         }
 
@@ -506,6 +564,7 @@
 
             renderWorkersList();
             updateSummary();
+            saveDataToStorage(); // Save data after overtime change
             autoSyncToGoogleSheets(); // Auto-sync after overtime change
         }
 
@@ -566,6 +625,7 @@
             renderMeasurements();
             updateVolumeCalculation();
             updateSummary();
+            saveDataToStorage(); // Save data after measurement added
             autoSyncToGoogleSheets(); // Auto-sync after measurement added
         }
 
@@ -615,6 +675,7 @@
             measurementData[today] = measurementData[today].filter(m => m.id !== id);
             renderMeasurements();
             updateSummary();
+            saveDataToStorage(); // Save data after measurement removed
             autoSyncToGoogleSheets(); // Auto-sync after measurement removed
         }
 
@@ -923,6 +984,7 @@
                     renderMeasurements();
                 }
                 updateSummary();
+                saveDataToStorage(); // Save data after reset
 
                 // Show confirmation
                 const syncStatus = document.getElementById('syncStatus');
@@ -984,5 +1046,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d7e0a32a531fa',t:'MTc1NDMwNDYxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d8bb6158c3d54',t:'MTc1NDMwNTE3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
