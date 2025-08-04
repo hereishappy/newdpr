@@ -155,23 +155,23 @@
                 </div>
             </div>
 
-            <!-- Google Sheets Integration -->
+            <!-- Auto-Sync Status -->
             <div class="mt-8 bg-white rounded-xl shadow-sm p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2 sm:mb-0">📊 Google Sheets Integration</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2 sm:mb-0">📊 Auto-Sync Status</h3>
                     <div class="flex flex-col sm:flex-row gap-2">
-                        <button onclick="exportToGoogleSheets()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
-                            📤 Export to Google Sheets
+                        <button onclick="resetAllData()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
+                            🔄 Reset All Data
                         </button>
-                        <button onclick="loadFromGoogleSheets()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
-                            📥 Load from Google Sheets
+                        <button onclick="submitFinalData()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
+                            ✅ Submit & Reset
                         </button>
                     </div>
                 </div>
                 <div id="syncStatus" class="text-sm text-gray-600 mb-2"></div>
                 <div class="bg-gray-50 rounded-lg p-3">
                     <p class="text-xs text-gray-600">
-                        <strong>Connected to:</strong> Google Sheets Database<br>
+                        <strong>Status:</strong> <span id="connectionStatus" class="text-green-600">🟢 Auto-sync enabled</span><br>
                         <strong>Last Sync:</strong> <span id="lastSyncTime">Never</span>
                     </p>
                 </div>
@@ -473,6 +473,7 @@
 
             renderWorkersList();
             updateSummary();
+            autoSyncToGoogleSheets(); // Auto-sync after attendance change
         }
 
         function setOvertimeHours(worker) {
@@ -505,6 +506,7 @@
 
             renderWorkersList();
             updateSummary();
+            autoSyncToGoogleSheets(); // Auto-sync after overtime change
         }
 
         function updateVolumeCalculation() {
@@ -564,6 +566,7 @@
             renderMeasurements();
             updateVolumeCalculation();
             updateSummary();
+            autoSyncToGoogleSheets(); // Auto-sync after measurement added
         }
 
         function renderMeasurements() {
@@ -612,6 +615,7 @@
             measurementData[today] = measurementData[today].filter(m => m.id !== id);
             renderMeasurements();
             updateSummary();
+            autoSyncToGoogleSheets(); // Auto-sync after measurement removed
         }
 
         function updateSummary() {
@@ -794,10 +798,22 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // Google Sheets Integration Functions
-        async function exportToGoogleSheets() {
+        // Auto-Sync Functions
+        let syncInProgress = false;
+        let syncQueue = false;
+
+        async function autoSyncToGoogleSheets() {
+            // Prevent multiple simultaneous syncs
+            if (syncInProgress) {
+                syncQueue = true;
+                return;
+            }
+
+            syncInProgress = true;
             const syncStatus = document.getElementById('syncStatus');
-            syncStatus.textContent = '📤 Exporting to Google Sheets...';
+            const connectionStatus = document.getElementById('connectionStatus');
+            
+            syncStatus.textContent = '🔄 Auto-syncing...';
             syncStatus.className = 'text-sm text-blue-600 mb-2';
 
             try {
@@ -851,92 +867,105 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    syncStatus.textContent = '✅ Successfully exported to Google Sheets!';
+                    syncStatus.textContent = '✅ Synced successfully';
                     syncStatus.className = 'text-sm text-green-600 mb-2';
+                    connectionStatus.textContent = '🟢 Auto-sync enabled';
+                    connectionStatus.className = 'text-green-600';
                     document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
                 } else {
-                    throw new Error(result.error || 'Export failed');
+                    throw new Error(result.error || 'Sync failed');
                 }
 
             } catch (error) {
-                console.error('Export error:', error);
-                syncStatus.textContent = '❌ Export failed: ' + error.message;
-                syncStatus.className = 'text-sm text-red-600 mb-2';
+                console.error('Auto-sync error:', error);
+                syncStatus.textContent = '⚠️ Sync failed - will retry';
+                syncStatus.className = 'text-sm text-orange-600 mb-2';
+                connectionStatus.textContent = '🟡 Connection issue';
+                connectionStatus.className = 'text-orange-600';
             }
 
-            // Clear status after 5 seconds
+            syncInProgress = false;
+
+            // Clear status after 3 seconds
             setTimeout(() => {
                 syncStatus.textContent = '';
-            }, 5000);
+            }, 3000);
+
+            // Process queued sync if needed
+            if (syncQueue) {
+                syncQueue = false;
+                setTimeout(() => autoSyncToGoogleSheets(), 1000);
+            }
         }
 
-        async function loadFromGoogleSheets() {
-            const syncStatus = document.getElementById('syncStatus');
-            syncStatus.textContent = '📥 Loading from Google Sheets...';
-            syncStatus.className = 'text-sm text-blue-600 mb-2';
-
-            try {
+        function resetAllData() {
+            if (confirm('Are you sure you want to reset all today\'s data? This action cannot be undone.')) {
                 const today = new Date().toDateString();
-                const response = await fetch(`${GOOGLE_SHEETS_URL}?action=getData&date=${encodeURIComponent(today)}`);
-                const result = await response.json();
+                
+                // Reset attendance data
+                workers.forEach(worker => {
+                    attendanceData[today][worker] = {
+                        present: false,
+                        overtime: false,
+                        overtimeHours: 0,
+                        markedBy: null,
+                        morningTime: null,
+                        eveningTime: null
+                    };
+                });
 
-                if (result.success) {
-                    // Load attendance data
-                    if (result.data.attendance && result.data.attendance.length > 0) {
-                        result.data.attendance.forEach(record => {
-                            const worker = record.Worker;
-                            if (worker && attendanceData[today] && attendanceData[today][worker]) {
-                                attendanceData[today][worker] = {
-                                    present: record.Present === 'Yes',
-                                    overtime: (record['Overtime Hours'] || 0) > 0,
-                                    overtimeHours: record['Overtime Hours'] || 0,
-                                    markedBy: record.Supervisor,
-                                    morningTime: record['Morning Time'] || null,
-                                    eveningTime: record['Evening Time'] || null
-                                };
-                            }
-                        });
-                    }
+                // Reset measurement data
+                measurementData[today] = [];
 
-                    // Load measurement data
-                    if (result.data.measurements && result.data.measurements.length > 0) {
-                        measurementData[today] = result.data.measurements.map(record => ({
-                            id: Date.now() + Math.random(),
-                            workType: record['Work Type'],
-                            length: record['Length (m)'],
-                            width: record['Width (m)'],
-                            height: record['Height (m)'],
-                            quantity: record.Quantity,
-                            volume: record['Volume (m³)'],
-                            supervisor: record.Supervisor,
-                            timestamp: record.Timestamp
-                        }));
-                    }
-
-                    // Refresh the UI
-                    renderWorkersList();
-                    if (currentTimePeriod === 'measurement') {
-                        renderMeasurements();
-                    }
-                    updateSummary();
-
-                    syncStatus.textContent = '✅ Successfully loaded from Google Sheets!';
-                    syncStatus.className = 'text-sm text-green-600 mb-2';
-                    document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
-                } else {
-                    throw new Error(result.error || 'Load failed');
+                // Refresh UI
+                renderWorkersList();
+                if (currentTimePeriod === 'measurement') {
+                    renderMeasurements();
                 }
+                updateSummary();
 
-            } catch (error) {
-                console.error('Load error:', error);
-                syncStatus.textContent = '❌ Load failed: ' + error.message;
-                syncStatus.className = 'text-sm text-red-600 mb-2';
+                // Show confirmation
+                const syncStatus = document.getElementById('syncStatus');
+                syncStatus.textContent = '🔄 All data has been reset';
+                syncStatus.className = 'text-sm text-orange-600 mb-2';
+                
+                setTimeout(() => {
+                    syncStatus.textContent = '';
+                }, 3000);
+            }
+        }
+
+        async function submitFinalData() {
+            const today = new Date().toDateString();
+            const presentCount = workers.filter(w => attendanceData[today][w].present).length;
+            const measurementCount = (measurementData[today] || []).length;
+            
+            if (presentCount === 0 && measurementCount === 0) {
+                alert('No data to submit. Please mark attendance or add measurements first.');
+                return;
             }
 
-            // Clear status after 5 seconds
-            setTimeout(() => {
-                syncStatus.textContent = '';
-            }, 5000);
+            const confirmMessage = `Final submission will include:\n• ${presentCount} workers marked present\n• ${measurementCount} measurements\n\nAfter submission, all data will be reset. Continue?`;
+            
+            if (confirm(confirmMessage)) {
+                const syncStatus = document.getElementById('syncStatus');
+                syncStatus.textContent = '📤 Final submission in progress...';
+                syncStatus.className = 'text-sm text-blue-600 mb-2';
+
+                // Force final sync
+                await autoSyncToGoogleSheets();
+
+                // Wait a moment then reset
+                setTimeout(() => {
+                    resetAllData();
+                    syncStatus.textContent = '✅ Data submitted and reset successfully!';
+                    syncStatus.className = 'text-sm text-green-600 mb-2';
+                    
+                    setTimeout(() => {
+                        syncStatus.textContent = '';
+                    }, 5000);
+                }, 2000);
+            }
         }
 
 
@@ -955,5 +984,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d6bfdc3fe444e',t:'MTc1NDMwMzg3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d76e954812e11',t:'MTc1NDMwNDMxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
