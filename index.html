@@ -700,21 +700,19 @@
             const currentDate = new Date().toLocaleDateString('en-GB');
             const presentWorkers = workers.filter(worker => attendanceData[today][worker].present);
             
-            let report = `📋 MORNING ATTENDANCE REPORT\n`;
-            report += `═══════════════════════════════════\n`;
-            report += `📅 Date: ${currentDate}\n`;
-            report += `👨‍💼 Supervisor: ${currentSupervisorName}\n`;
-            report += `👥 Total Present: ${presentWorkers.length} workers\n\n`;
-            report += `📝 PRESENT WORKERS:\n`;
-            report += `─────────────────────────────────\n`;
+            let report = `MORNING ATTENDANCE REPORT\n`;
+            report += `===============================\n`;
+            report += `Date: ${currentDate}\n`;
+            report += `Supervisor: ${currentSupervisorName}\n`;
+            report += `Total Present: ${presentWorkers.length} workers\n\n`;
+            report += `PRESENT WORKERS:\n`;
+            report += `-------------------------------\n`;
             
             presentWorkers.forEach((worker, index) => {
-                const workerData = attendanceData[today][worker];
                 report += `${index + 1}. ${worker}\n`;
-                report += `   ⏰ Check-in: ${workerData.morningTime}\n\n`;
             });
             
-            report += `═══════════════════════════════════\n`;
+            report += `\n===============================\n`;
             report += `Generated at: ${new Date().toLocaleTimeString()}\n`;
             
             document.getElementById('attendanceReportText').textContent = report;
@@ -742,43 +740,45 @@
             const totalManHours = (presentCount * 8) + totalOvertimeHours;
             const productivity = totalManHours > 0 ? (totalVolume / totalManHours).toFixed(2) : '0.00';
             
-            let report = `📊 DAILY WORK SUMMARY REPORT\n`;
-            report += `═══════════════════════════════════\n`;
-            report += `📅 Date: ${currentDate}\n`;
-            report += `👨‍💼 Supervisor: ${currentSupervisorName}\n\n`;
+            let report = `DAILY WORK SUMMARY REPORT\n`;
+            report += `===============================\n`;
+            report += `Date: ${currentDate}\n`;
+            report += `Supervisor: ${currentSupervisorName}\n\n`;
             
-            report += `👥 MANPOWER SUMMARY:\n`;
-            report += `─────────────────────────────────\n`;
-            report += `• Present Workers: ${presentCount}\n`;
-            report += `• Total Overtime Hours: ${totalOvertimeHours.toFixed(1)}\n`;
-            report += `• Total Man Hours: ${totalManHours}\n\n`;
+            report += `MANPOWER SUMMARY:\n`;
+            report += `-------------------------------\n`;
+            report += `Present Workers: ${presentCount}\n`;
+            report += `Total Overtime Hours: ${totalOvertimeHours.toFixed(1)}\n`;
+            report += `Total Man Hours: ${totalManHours}\n\n`;
             
             if (totalOvertimeHours > 0) {
-                report += `⏰ OVERTIME WORKERS:\n`;
-                report += `─────────────────────────────────\n`;
+                report += `OVERTIME WORKERS:\n`;
+                report += `-------------------------------\n`;
+                let overtimeIndex = 1;
                 workers.forEach(worker => {
                     const workerData = attendanceData[today][worker];
                     if (workerData.overtimeHours > 0) {
-                        report += `• ${worker}: ${workerData.overtimeHours} hours\n`;
+                        report += `${overtimeIndex}. ${worker}: ${workerData.overtimeHours} hours\n`;
+                        overtimeIndex++;
                     }
                 });
                 report += `\n`;
             }
             
             if (measurements.length > 0) {
-                report += `🏗️ WORK COMPLETED:\n`;
-                report += `─────────────────────────────────\n`;
-                report += `• Total Erection: ${erectionVolume.toFixed(2)} m³\n`;
-                report += `• Total Dismantling: ${dismantlingVolume.toFixed(2)} m³\n`;
-                report += `• Total Volume: ${totalVolume.toFixed(2)} m³\n\n`;
+                report += `WORK COMPLETED:\n`;
+                report += `-------------------------------\n`;
+                report += `Total Erection: ${erectionVolume.toFixed(2)} m³\n`;
+                report += `Total Dismantling: ${dismantlingVolume.toFixed(2)} m³\n`;
+                report += `Total Volume: ${totalVolume.toFixed(2)} m³\n\n`;
                 
-                report += `📈 PRODUCTIVITY:\n`;
-                report += `─────────────────────────────────\n`;
-                report += `• Productivity Rate: ${productivity} m³/hour\n`;
-                report += `• Performance: ${parseFloat(productivity) >= 2.5 ? '✅ Good' : '⚠️ Needs Improvement'}\n\n`;
+                report += `PRODUCTIVITY:\n`;
+                report += `-------------------------------\n`;
+                report += `Productivity Rate: ${productivity} m³/hour\n`;
+                report += `Performance: ${parseFloat(productivity) >= 2.5 ? 'Good' : 'Needs Improvement'}\n\n`;
             }
             
-            report += `═══════════════════════════════════\n`;
+            report += `===============================\n`;
             report += `Generated at: ${new Date().toLocaleTimeString()}\n`;
             
             document.getElementById('summaryReportText').textContent = report;
@@ -984,5 +984,5 @@
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d76e954812e11',t:'MTc1NDMwNDMxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d7e0a32a531fa',t:'MTc1NDMwNDYxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
