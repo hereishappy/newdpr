@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Tracking System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Attendance System</h1>
+                <p class="text-gray-600">Supervisor Login</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Supervisor</label>
+                    <select id="supervisorSelect" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Supervisor</option>
+                        <option value="MAHENDRA KUMAR">MAHENDRA KUMAR</option>
+                        <option value="PINTU SAH">PINTU SAH</option>
+                        <option value="SUNIL CHAUHAN">SUNIL CHAUHAN</option>
+                        <option value="HARKIRAT SINGH">HARKIRAT SINGH</option>
+                        <option value="NWSUP1">NWSUP1</option>
+                        <option value="NWSUP2">NWSUP2</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">PIN</label>
+                    <input type="password" id="pinInput" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter PIN">
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200">
+                    Login
+                </button>
+            </form>
+            
+            <div id="loginError" class="mt-4 text-red-600 text-sm text-center hidden"></div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 gap-3">
+                    <div class="flex-1 min-w-0">
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">Attendance Dashboard</h1>
+                        <p class="text-sm sm:text-base text-gray-600 truncate">Welcome, <span id="currentSupervisor"></span></p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                        <span id="currentDate" class="text-xs sm:text-sm text-gray-600"></span>
+                        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition duration-200 text-sm sm:text-base w-full sm:w-auto">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Time Period Selector -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                <div class="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:items-center">
+                    <h2 class="text-lg font-semibold text-gray-800">Work Progress</h2>
+                    <div class="flex bg-gray-100 rounded-lg p-1 w-full sm:w-auto">
+                        <button id="morningBtn" onclick="setTimePeriod('morning')" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium transition duration-200 bg-blue-600 text-white text-sm sm:text-base">
+                            Morning Check-in
+                        </button>
+                        <button id="measurementBtn" onclick="setTimePeriod('measurement')" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium transition duration-200 text-gray-600 hover:text-gray-800 text-sm sm:text-base">
+                            Measurements
+                        </button>
+                        <button id="eveningBtn" onclick="setTimePeriod('evening')" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium transition duration-200 text-gray-600 hover:text-gray-800 text-sm sm:text-base">
+                            Evening Overtime
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Measurement Entries Section -->
+            <div id="measurementSection" class="bg-white rounded-xl shadow-sm p-6 mb-8 hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Work Measurements</h3>
+                
+                <!-- Add Measurement Form -->
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Work Type</label>
+                            <select id="workType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                <option value="erection">Erection</option>
+                                <option value="dismantling">Dismantling</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Length (m)</label>
+                            <input type="number" id="length" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Width (m)</label>
+                            <input type="number" id="width" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Height (m)</label>
+                            <input type="number" id="height" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                            <input type="number" id="quantity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="1">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="addMeasurement()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
+                                Add Entry
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <span class="font-medium">Calculated Volume: </span>
+                        <span id="calculatedVolume" class="text-blue-600 font-semibold">0.00 m³</span>
+                    </div>
+                </div>
+
+                <!-- Measurements List -->
+                <div id="measurementsList" class="space-y-3 mb-6">
+                    <!-- Measurements will be populated here -->
+                </div>
+
+                <!-- Total Volume -->
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-semibold text-blue-800">Total Volume:</span>
+                        <span id="totalVolume" class="text-2xl font-bold text-blue-600">0.00 m³</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workers List -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Workers List</h3>
+                    <p class="text-sm text-gray-600 mt-1">Click to mark attendance for <span id="timePeriodText">morning check-in</span></p>
+                </div>
+                
+                <div class="divide-y divide-gray-200" id="workersList">
+                    <!-- Workers will be populated here -->
+                </div>
+            </div>
+
+            <!-- Google Sheets Integration -->
+            <div class="mt-8 bg-white rounded-xl shadow-sm p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2 sm:mb-0">📊 Google Sheets Integration</h3>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button onclick="exportToGoogleSheets()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
+                            📤 Export to Google Sheets
+                        </button>
+                        <button onclick="loadFromGoogleSheets()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
+                            📥 Load from Google Sheets
+                        </button>
+                    </div>
+                </div>
+                <div id="syncStatus" class="text-sm text-gray-600 mb-2"></div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-600">
+                        <strong>Connected to:</strong> Google Sheets Database<br>
+                        <strong>Last Sync:</strong> <span id="lastSyncTime">Never</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="attendanceReportSection" class="mt-8 bg-white rounded-xl shadow-sm p-6 hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Morning Attendance Report</h3>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <pre id="attendanceReportText" class="text-sm text-gray-800 whitespace-pre-wrap font-mono"></pre>
+                </div>
+                <button onclick="shareAttendanceReport()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
+                    📱 Share via WhatsApp
+                </button>
+            </div>
+
+            <div id="summaryReportSection" class="mt-8 bg-white rounded-xl shadow-sm p-6 hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Daily Work Summary Report</h3>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <pre id="summaryReportText" class="text-sm text-gray-800 whitespace-pre-wrap font-mono"></pre>
+                </div>
+                <button onclick="shareSummaryReport()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
+                    📱 Share via WhatsApp
+                </button>
+            </div>
+
+            <!-- Summary -->
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div class="bg-green-50 rounded-xl p-4 sm:p-6">
+                    <h4 class="text-base sm:text-lg font-semibold text-green-800 mb-2">Present Today</h4>
+                    <p class="text-2xl sm:text-3xl font-bold text-green-600" id="presentCount">0</p>
+                </div>
+                <div class="bg-yellow-50 rounded-xl p-4 sm:p-6">
+                    <h4 class="text-base sm:text-lg font-semibold text-yellow-800 mb-2">Overtime Hours</h4>
+                    <p class="text-2xl sm:text-3xl font-bold text-yellow-600" id="overtimeCount">0</p>
+                </div>
+                <div class="bg-blue-50 rounded-xl p-4 sm:p-6">
+                    <h4 class="text-base sm:text-lg font-semibold text-blue-800 mb-2">Total Man Hours</h4>
+                    <p class="text-2xl sm:text-3xl font-bold text-blue-600" id="totalManHours">0</p>
+                </div>
+                <div id="productivityCard" class="rounded-xl p-4 sm:p-6 hidden">
+                    <h4 class="text-base sm:text-lg font-semibold mb-2">Productivity</h4>
+                    <p class="text-2xl sm:text-3xl font-bold mb-2" id="productivityValue">0.00</p>
+                    <p class="text-sm" id="productivityFeedback"></p>
+                </div>
+            </div>
+
+
+        </main>
+    </div>
+
+    <script>
+        // Data
+        const supervisors = {
+            'MAHENDRA KUMAR': 'MAHE01',
+            'PINTU SAH': 'PINT02',
+            'SUNIL CHAUHAN': 'SUNI03',
+            'HARKIRAT SINGH': 'HARK04',
+            'NWSUP1': 'NWSU05',
+            'NWSUP2': 'NWSU06'
+        };
+
+        const workers = [
+            'GURWINDER SINGH', 'P.LAVANYA', 'D SRIRAM KUMAR', 'P.SEETARAM (DRIVER)',
+            'S.KARTHEEK (DRIVER)', 'HARKIRAT', 'MAHENDRA KUMAR', 'SUNIL CHAUHAN',
+            'PINTU KUMAR SAH', 'AMAN KUMAR', 'ATUL MAHADEO', 'CHANDAN KUMAR',
+            'DEEPAK DAS', 'DEEPAK KUMAR', 'DHIRAJ KUMAR MANJI', 'DAULAT YADAV',
+            'FOOL SINGH', 'KIRAN PASWAN', 'KUNDAN KUMAR', 'MITLESH KUMAR',
+            'NIRAJ KUMAR', 'NANDAN KUMAR', 'NARESH KUMAR', 'OM PRAKASH',
+            'PANDURANG', 'RAJU KUMAR', 'ROSHAN CHAUHAN', 'RAM BABU',
+            'RAM KISHOR DAS', 'RAHUL KUMAR', 'SANDIP MADHUKAR', 'SAHAB CHAUHAN',
+            'SARVESH KUMAR', 'SANJITH YADAV', 'SHIVAM KUMAR', 'SUDISH SAH',
+            'VISHAL PRUTHVIRAJ'
+        ];
+
+        let currentTimePeriod = 'morning';
+        let currentSupervisorName = '';
+        let attendanceData = {};
+        let measurementData = {};
+        let dailyMeasurements = [];
+
+        // Google Sheets Integration
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzB_CKWgXIz1ucspbpUJpTngXf5mlmWJPn30ZLQ2KG1ol4KjFJxTOLH4AbmtjizTKfs/exec';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            initializeAttendanceData();
+        });
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        function initializeAttendanceData() {
+            const today = new Date().toDateString();
+            if (!attendanceData[today]) {
+                attendanceData[today] = {};
+                workers.forEach(worker => {
+                    attendanceData[today][worker] = {
+                        present: false,
+                        overtime: false,
+                        overtimeHours: 0,
+                        markedBy: null,
+                        morningTime: null,
+                        eveningTime: null
+                    };
+                });
+            }
+            if (!measurementData[today]) {
+                measurementData[today] = [];
+            }
+        }
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const supervisor = document.getElementById('supervisorSelect').value;
+            const pin = document.getElementById('pinInput').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (!supervisor || !pin) {
+                showError('Please select supervisor and enter PIN');
+                return;
+            }
+
+            if (supervisors[supervisor] === pin) {
+                currentSupervisorName = supervisor;
+                document.getElementById('currentSupervisor').textContent = supervisor;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                renderWorkersList();
+                updateSummary();
+            } else {
+                showError('Invalid supervisor or PIN');
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 3000);
+        }
+
+        function logout() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('supervisorSelect').value = '';
+            document.getElementById('pinInput').value = '';
+            currentSupervisorName = '';
+        }
+
+        function setTimePeriod(period) {
+            currentTimePeriod = period;
+            const morningBtn = document.getElementById('morningBtn');
+            const measurementBtn = document.getElementById('measurementBtn');
+            const eveningBtn = document.getElementById('eveningBtn');
+            const timePeriodText = document.getElementById('timePeriodText');
+            const measurementSection = document.getElementById('measurementSection');
+            const workersList = document.getElementById('workersList').parentElement;
+
+            // Reset all buttons
+            [morningBtn, measurementBtn, eveningBtn].forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('text-gray-600', 'hover:text-gray-800');
+            });
+
+            if (period === 'morning') {
+                morningBtn.classList.add('bg-blue-600', 'text-white');
+                morningBtn.classList.remove('text-gray-600', 'hover:text-gray-800');
+                timePeriodText.textContent = 'morning check-in';
+                measurementSection.classList.add('hidden');
+                workersList.classList.remove('hidden');
+            } else if (period === 'measurement') {
+                measurementBtn.classList.add('bg-blue-600', 'text-white');
+                measurementBtn.classList.remove('text-gray-600', 'hover:text-gray-800');
+                timePeriodText.textContent = 'work measurements';
+                measurementSection.classList.remove('hidden');
+                workersList.classList.add('hidden');
+                renderMeasurements();
+                updateVolumeCalculation();
+            } else {
+                eveningBtn.classList.add('bg-blue-600', 'text-white');
+                eveningBtn.classList.remove('text-gray-600', 'hover:text-gray-800');
+                timePeriodText.textContent = 'evening overtime';
+                measurementSection.classList.add('hidden');
+                workersList.classList.remove('hidden');
+            }
+            
+            if (period !== 'measurement') {
+                renderWorkersList();
+            }
+        }
+
+        function renderWorkersList() {
+            const workersList = document.getElementById('workersList');
+            const today = new Date().toDateString();
+            
+            // Filter workers based on time period and supervisor
+            let workersToShow = workers;
+            if (currentTimePeriod === 'evening') {
+                // For evening, only show workers that current supervisor marked as present in morning
+                workersToShow = workers.filter(worker => {
+                    const workerData = attendanceData[today][worker];
+                    return workerData.present && workerData.markedBy === currentSupervisorName;
+                });
+            }
+            
+            if (currentTimePeriod === 'evening' && workersToShow.length === 0) {
+                workersList.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">
+                        <p class="text-lg mb-2">No workers marked present by you today</p>
+                        <p class="text-sm">Switch to morning check-in to mark workers present first</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            workersList.innerHTML = workersToShow.map(worker => {
+                const workerData = attendanceData[today][worker];
+                const isMarked = currentTimePeriod === 'morning' ? workerData.present : (workerData.overtimeHours > 0);
+                const statusClass = isMarked ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50 active:bg-blue-50';
+
+                if (currentTimePeriod === 'morning') {
+                    const buttonClass = isMarked ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-blue-600 hover:text-white active:bg-blue-700';
+                    const buttonText = isMarked ? 'Present ✓' : 'Mark Present';
+
+                    return `
+                        <div class="flex items-center justify-between p-4 ${statusClass} transition duration-200">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-medium text-gray-900 text-sm sm:text-base truncate">${worker}</h4>
+                                ${isMarked ? `<p class="text-xs sm:text-sm text-gray-600 mt-1">Marked by ${workerData.markedBy} at ${workerData.morningTime}</p>` : ''}
+                            </div>
+                            <button 
+                                onclick="toggleAttendance('${worker}')" 
+                                class="px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium transition duration-200 text-xs sm:text-sm whitespace-nowrap ml-3 ${buttonClass}">
+                                ${buttonText}
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    // Evening overtime with manual hours input
+                    return `
+                        <div class="flex items-center justify-between p-4 ${statusClass} transition duration-200">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-medium text-gray-900 text-sm sm:text-base truncate">${worker}</h4>
+                                ${workerData.overtimeHours > 0 ? `<p class="text-xs sm:text-sm text-gray-600 mt-1">${workerData.overtimeHours} hours overtime - Marked by ${workerData.markedBy} at ${workerData.eveningTime}</p>` : ''}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input 
+                                    type="number" 
+                                    id="overtime_${worker.replace(/\s+/g, '_')}" 
+                                    min="0" 
+                                    max="12" 
+                                    step="0.5" 
+                                    value="${workerData.overtimeHours || ''}" 
+                                    placeholder="Hours" 
+                                    class="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <button 
+                                    onclick="setOvertimeHours('${worker}')" 
+                                    class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition duration-200">
+                                    Set
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function toggleAttendance(worker) {
+            const today = new Date().toDateString();
+            const now = new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+
+            if (currentTimePeriod === 'morning') {
+                attendanceData[today][worker].present = !attendanceData[today][worker].present;
+                if (attendanceData[today][worker].present) {
+                    attendanceData[today][worker].markedBy = currentSupervisorName;
+                    attendanceData[today][worker].morningTime = now;
+                } else {
+                    attendanceData[today][worker].markedBy = null;
+                    attendanceData[today][worker].morningTime = null;
+                }
+            }
+
+            renderWorkersList();
+            updateSummary();
+        }
+
+        function setOvertimeHours(worker) {
+            const today = new Date().toDateString();
+            const now = new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            const inputId = `overtime_${worker.replace(/\s+/g, '_')}`;
+            const hoursInput = document.getElementById(inputId);
+            const hours = parseFloat(hoursInput.value) || 0;
+
+            if (hours < 0 || hours > 12) {
+                alert('Please enter overtime hours between 0 and 12');
+                return;
+            }
+
+            attendanceData[today][worker].overtimeHours = hours;
+            attendanceData[today][worker].overtime = hours > 0;
+            
+            if (hours > 0) {
+                attendanceData[today][worker].markedBy = currentSupervisorName;
+                attendanceData[today][worker].eveningTime = now;
+            } else {
+                attendanceData[today][worker].markedBy = null;
+                attendanceData[today][worker].eveningTime = null;
+            }
+
+            renderWorkersList();
+            updateSummary();
+        }
+
+        function updateVolumeCalculation() {
+            const length = parseFloat(document.getElementById('length').value) || 0;
+            const width = parseFloat(document.getElementById('width').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            const workType = document.getElementById('workType').value;
+
+            let volume = length * width * height * quantity;
+            if (workType === 'dismantling') {
+                volume = volume / 2;
+            }
+
+            document.getElementById('calculatedVolume').textContent = volume.toFixed(2) + ' m³';
+        }
+
+        function addMeasurement() {
+            const length = parseFloat(document.getElementById('length').value);
+            const width = parseFloat(document.getElementById('width').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            const workType = document.getElementById('workType').value;
+
+            if (!length || !width || !height) {
+                alert('Please fill in all measurement fields');
+                return;
+            }
+
+            let volume = length * width * height * quantity;
+            if (workType === 'dismantling') {
+                volume = volume / 2;
+            }
+
+            const measurement = {
+                id: Date.now(),
+                workType,
+                length,
+                width,
+                height,
+                quantity,
+                volume: parseFloat(volume.toFixed(2)),
+                supervisor: currentSupervisorName,
+                timestamp: new Date().toLocaleTimeString()
+            };
+
+            const today = new Date().toDateString();
+            measurementData[today].push(measurement);
+
+            // Clear form
+            document.getElementById('length').value = '';
+            document.getElementById('width').value = '';
+            document.getElementById('height').value = '';
+            document.getElementById('quantity').value = '1';
+            document.getElementById('workType').value = 'erection';
+
+            renderMeasurements();
+            updateVolumeCalculation();
+            updateSummary();
+        }
+
+        function renderMeasurements() {
+            const today = new Date().toDateString();
+            const measurements = measurementData[today] || [];
+            const measurementsList = document.getElementById('measurementsList');
+
+            if (measurements.length === 0) {
+                measurementsList.innerHTML = '<p class="text-gray-500 text-center py-4">No measurements added yet</p>';
+                document.getElementById('totalVolume').textContent = '0.00 m³';
+                return;
+            }
+
+            let totalVolume = 0;
+            measurementsList.innerHTML = measurements.map(measurement => {
+                totalVolume += measurement.volume;
+                return `
+                    <div class="bg-gray-50 rounded-lg p-4 flex justify-between items-center">
+                        <div class="flex-1">
+                            <div class="flex flex-wrap gap-4 text-sm">
+                                <span class="font-medium ${measurement.workType === 'erection' ? 'text-green-600' : 'text-orange-600'}">
+                                    ${measurement.workType.toUpperCase()}
+                                </span>
+                                <span>L: ${measurement.length}m</span>
+                                <span>W: ${measurement.width}m</span>
+                                <span>H: ${measurement.height}m</span>
+                                <span>Qty: ${measurement.quantity}</span>
+                                <span class="font-semibold text-blue-600">${measurement.volume} m³</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Added by ${measurement.supervisor} at ${measurement.timestamp}</p>
+                        </div>
+                        <button onclick="removeMeasurement(${measurement.id})" class="text-red-600 hover:text-red-800 ml-4">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('totalVolume').textContent = totalVolume.toFixed(2) + ' m³';
+        }
+
+        function removeMeasurement(id) {
+            const today = new Date().toDateString();
+            measurementData[today] = measurementData[today].filter(m => m.id !== id);
+            renderMeasurements();
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const today = new Date().toDateString();
+            let presentCount = 0;
+            let totalOvertimeHours = 0;
+
+            workers.forEach(worker => {
+                if (attendanceData[today][worker].present) presentCount++;
+                totalOvertimeHours += attendanceData[today][worker].overtimeHours || 0;
+            });
+
+            // Calculate total man hours: (present workers * 8) + total overtime hours
+            const totalManHours = (presentCount * 8) + totalOvertimeHours;
+
+            document.getElementById('presentCount').textContent = presentCount;
+            document.getElementById('overtimeCount').textContent = totalOvertimeHours.toFixed(1);
+            document.getElementById('totalManHours').textContent = totalManHours;
+
+            // Show attendance report if workers are present
+            if (presentCount > 0) {
+                generateAttendanceReport();
+                document.getElementById('attendanceReportSection').classList.remove('hidden');
+            } else {
+                document.getElementById('attendanceReportSection').classList.add('hidden');
+            }
+
+            // Calculate productivity if measurements exist
+            const measurements = measurementData[today] || [];
+            if (measurements.length > 0 && totalManHours > 0) {
+                let erectionVolume = 0;
+                let dismantlingVolume = 0;
+
+                measurements.forEach(m => {
+                    if (m.workType === 'erection') {
+                        erectionVolume += m.volume;
+                    } else {
+                        dismantlingVolume += m.volume;
+                    }
+                });
+
+                const totalVolume = erectionVolume + dismantlingVolume;
+                const productivity = totalVolume / totalManHours;
+
+                const productivityCard = document.getElementById('productivityCard');
+                const productivityValue = document.getElementById('productivityValue');
+                const productivityFeedback = document.getElementById('productivityFeedback');
+
+                productivityCard.classList.remove('hidden');
+                productivityValue.textContent = productivity.toFixed(2);
+
+                if (productivity < 2.5) {
+                    productivityCard.className = 'bg-red-50 rounded-xl p-4 sm:p-6';
+                    productivityValue.className = 'text-2xl sm:text-3xl font-bold mb-2 text-red-600';
+                    productivityFeedback.className = 'text-sm text-red-800 font-medium';
+                    productivityFeedback.textContent = '⚠️ Low Productivity - Needs Improvement';
+                } else {
+                    productivityCard.className = 'bg-green-50 rounded-xl p-4 sm:p-6';
+                    productivityValue.className = 'text-2xl sm:text-3xl font-bold mb-2 text-green-600';
+                    productivityFeedback.className = 'text-sm text-green-800 font-medium';
+                    productivityFeedback.textContent = '✅ Good Productivity - Keep it up!';
+                }
+
+                // Show summary report if overtime or measurements exist
+                if (totalOvertimeHours > 0 || measurements.length > 0) {
+                    generateSummaryReport();
+                    document.getElementById('summaryReportSection').classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('productivityCard').classList.add('hidden');
+                if (totalOvertimeHours > 0) {
+                    generateSummaryReport();
+                    document.getElementById('summaryReportSection').classList.remove('hidden');
+                } else {
+                    document.getElementById('summaryReportSection').classList.add('hidden');
+                }
+            }
+        }
+
+        function generateAttendanceReport() {
+            const today = new Date().toDateString();
+            const currentDate = new Date().toLocaleDateString('en-GB');
+            const presentWorkers = workers.filter(worker => attendanceData[today][worker].present);
+            
+            let report = `📋 MORNING ATTENDANCE REPORT\n`;
+            report += `═══════════════════════════════════\n`;
+            report += `📅 Date: ${currentDate}\n`;
+            report += `👨‍💼 Supervisor: ${currentSupervisorName}\n`;
+            report += `👥 Total Present: ${presentWorkers.length} workers\n\n`;
+            report += `📝 PRESENT WORKERS:\n`;
+            report += `─────────────────────────────────\n`;
+            
+            presentWorkers.forEach((worker, index) => {
+                const workerData = attendanceData[today][worker];
+                report += `${index + 1}. ${worker}\n`;
+                report += `   ⏰ Check-in: ${workerData.morningTime}\n\n`;
+            });
+            
+            report += `═══════════════════════════════════\n`;
+            report += `Generated at: ${new Date().toLocaleTimeString()}\n`;
+            
+            document.getElementById('attendanceReportText').textContent = report;
+        }
+
+        function generateSummaryReport() {
+            const today = new Date().toDateString();
+            const currentDate = new Date().toLocaleDateString('en-GB');
+            const measurements = measurementData[today] || [];
+            
+            // Calculate totals
+            let erectionVolume = 0;
+            let dismantlingVolume = 0;
+            measurements.forEach(m => {
+                if (m.workType === 'erection') {
+                    erectionVolume += m.volume;
+                } else {
+                    dismantlingVolume += m.volume;
+                }
+            });
+            
+            const totalVolume = erectionVolume + dismantlingVolume;
+            const presentCount = workers.filter(w => attendanceData[today][w].present).length;
+            const totalOvertimeHours = workers.reduce((sum, w) => sum + (attendanceData[today][w].overtimeHours || 0), 0);
+            const totalManHours = (presentCount * 8) + totalOvertimeHours;
+            const productivity = totalManHours > 0 ? (totalVolume / totalManHours).toFixed(2) : '0.00';
+            
+            let report = `📊 DAILY WORK SUMMARY REPORT\n`;
+            report += `═══════════════════════════════════\n`;
+            report += `📅 Date: ${currentDate}\n`;
+            report += `👨‍💼 Supervisor: ${currentSupervisorName}\n\n`;
+            
+            report += `👥 MANPOWER SUMMARY:\n`;
+            report += `─────────────────────────────────\n`;
+            report += `• Present Workers: ${presentCount}\n`;
+            report += `• Total Overtime Hours: ${totalOvertimeHours.toFixed(1)}\n`;
+            report += `• Total Man Hours: ${totalManHours}\n\n`;
+            
+            if (totalOvertimeHours > 0) {
+                report += `⏰ OVERTIME WORKERS:\n`;
+                report += `─────────────────────────────────\n`;
+                workers.forEach(worker => {
+                    const workerData = attendanceData[today][worker];
+                    if (workerData.overtimeHours > 0) {
+                        report += `• ${worker}: ${workerData.overtimeHours} hours\n`;
+                    }
+                });
+                report += `\n`;
+            }
+            
+            if (measurements.length > 0) {
+                report += `🏗️ WORK COMPLETED:\n`;
+                report += `─────────────────────────────────\n`;
+                report += `• Total Erection: ${erectionVolume.toFixed(2)} m³\n`;
+                report += `• Total Dismantling: ${dismantlingVolume.toFixed(2)} m³\n`;
+                report += `• Total Volume: ${totalVolume.toFixed(2)} m³\n\n`;
+                
+                report += `📈 PRODUCTIVITY:\n`;
+                report += `─────────────────────────────────\n`;
+                report += `• Productivity Rate: ${productivity} m³/hour\n`;
+                report += `• Performance: ${parseFloat(productivity) >= 2.5 ? '✅ Good' : '⚠️ Needs Improvement'}\n\n`;
+            }
+            
+            report += `═══════════════════════════════════\n`;
+            report += `Generated at: ${new Date().toLocaleTimeString()}\n`;
+            
+            document.getElementById('summaryReportText').textContent = report;
+        }
+
+        function shareAttendanceReport() {
+            const reportText = document.getElementById('attendanceReportText').textContent;
+            const encodedText = encodeURIComponent(reportText);
+            const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function shareSummaryReport() {
+            const reportText = document.getElementById('summaryReportText').textContent;
+            const encodedText = encodeURIComponent(reportText);
+            const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Google Sheets Integration Functions
+        async function exportToGoogleSheets() {
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.textContent = '📤 Exporting to Google Sheets...';
+            syncStatus.className = 'text-sm text-blue-600 mb-2';
+
+            try {
+                const today = new Date().toDateString();
+                
+                // Prepare attendance data
+                const manpowerAttendance = [];
+                workers.forEach(worker => {
+                    const workerData = attendanceData[today][worker];
+                    if (workerData.present || workerData.overtimeHours > 0) {
+                        manpowerAttendance.push({
+                            date: today,
+                            supervisor: currentSupervisorName,
+                            worker: worker,
+                            present: workerData.present ? 'Yes' : 'No',
+                            morningTime: workerData.morningTime || '',
+                            overtimeHours: workerData.overtimeHours || 0,
+                            eveningTime: workerData.eveningTime || '',
+                            regularHours: workerData.present ? 8 : 0,
+                            totalHours: (workerData.present ? 8 : 0) + (workerData.overtimeHours || 0)
+                        });
+                    }
+                });
+
+                // Prepare measurement data
+                const measurements = (measurementData[today] || []).map(measurement => ({
+                    date: today,
+                    supervisor: measurement.supervisor,
+                    workType: measurement.workType,
+                    length: measurement.length,
+                    width: measurement.width,
+                    height: measurement.height,
+                    quantity: measurement.quantity,
+                    volume: measurement.volume,
+                    timestamp: measurement.timestamp
+                }));
+
+                const exportData = {
+                    manpowerAttendance,
+                    measurements
+                };
+
+                const response = await fetch(GOOGLE_SHEETS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(exportData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    syncStatus.textContent = '✅ Successfully exported to Google Sheets!';
+                    syncStatus.className = 'text-sm text-green-600 mb-2';
+                    document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
+                } else {
+                    throw new Error(result.error || 'Export failed');
+                }
+
+            } catch (error) {
+                console.error('Export error:', error);
+                syncStatus.textContent = '❌ Export failed: ' + error.message;
+                syncStatus.className = 'text-sm text-red-600 mb-2';
+            }
+
+            // Clear status after 5 seconds
+            setTimeout(() => {
+                syncStatus.textContent = '';
+            }, 5000);
+        }
+
+        async function loadFromGoogleSheets() {
+            const syncStatus = document.getElementById('syncStatus');
+            syncStatus.textContent = '📥 Loading from Google Sheets...';
+            syncStatus.className = 'text-sm text-blue-600 mb-2';
+
+            try {
+                const today = new Date().toDateString();
+                const response = await fetch(`${GOOGLE_SHEETS_URL}?action=getData&date=${encodeURIComponent(today)}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    // Load attendance data
+                    if (result.data.attendance && result.data.attendance.length > 0) {
+                        result.data.attendance.forEach(record => {
+                            const worker = record.Worker;
+                            if (worker && attendanceData[today] && attendanceData[today][worker]) {
+                                attendanceData[today][worker] = {
+                                    present: record.Present === 'Yes',
+                                    overtime: (record['Overtime Hours'] || 0) > 0,
+                                    overtimeHours: record['Overtime Hours'] || 0,
+                                    markedBy: record.Supervisor,
+                                    morningTime: record['Morning Time'] || null,
+                                    eveningTime: record['Evening Time'] || null
+                                };
+                            }
+                        });
+                    }
+
+                    // Load measurement data
+                    if (result.data.measurements && result.data.measurements.length > 0) {
+                        measurementData[today] = result.data.measurements.map(record => ({
+                            id: Date.now() + Math.random(),
+                            workType: record['Work Type'],
+                            length: record['Length (m)'],
+                            width: record['Width (m)'],
+                            height: record['Height (m)'],
+                            quantity: record.Quantity,
+                            volume: record['Volume (m³)'],
+                            supervisor: record.Supervisor,
+                            timestamp: record.Timestamp
+                        }));
+                    }
+
+                    // Refresh the UI
+                    renderWorkersList();
+                    if (currentTimePeriod === 'measurement') {
+                        renderMeasurements();
+                    }
+                    updateSummary();
+
+                    syncStatus.textContent = '✅ Successfully loaded from Google Sheets!';
+                    syncStatus.className = 'text-sm text-green-600 mb-2';
+                    document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
+                } else {
+                    throw new Error(result.error || 'Load failed');
+                }
+
+            } catch (error) {
+                console.error('Load error:', error);
+                syncStatus.textContent = '❌ Load failed: ' + error.message;
+                syncStatus.className = 'text-sm text-red-600 mb-2';
+            }
+
+            // Clear status after 5 seconds
+            setTimeout(() => {
+                syncStatus.textContent = '';
+            }, 5000);
+        }
+
+
+
+        // Add event listeners for real-time volume calculation
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            initializeAttendanceData();
+            
+            ['length', 'width', 'height', 'quantity', 'workType'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', updateVolumeCalculation);
+                    element.addEventListener('change', updateVolumeCalculation);
+                }
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d6bfdc3fe444e',t:'MTc1NDMwMzg3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
