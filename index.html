@@ -12,14 +12,7 @@
             font-family: 'Inter', sans-serif;
         }
         
-        .ticker {
-            animation: scroll 30s linear infinite;
-        }
-        
-        @keyframes scroll {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
+
         
         .dashboard-iframe {
             border: none;
@@ -65,19 +58,7 @@
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="bg-slate-900 text-white shadow-lg">
-        <!-- Header Ticker -->
-        <div class="bg-slate-900 py-3 overflow-hidden">
-            <div class="ticker whitespace-nowrap text-sm text-slate-300">
-                <span class="inline-block px-8">📊 Site Performance Dashboard</span>
-                <span class="inline-block px-8">📍 Current Location: <span id="location">Loading...</span></span>
-                <span class="inline-block px-8">🕐 Local Time: <span id="current-time">--:-- --</span></span>
-                <span class="inline-block px-8">🌤️ Weather: <span id="weather">Loading...</span></span>
-                <span class="inline-block px-8">📊 Dashboard Status: Live Data Connected</span>
-            </div>
-        </div>
-    </header>
+
 
     <!-- Main Dashboard Content -->
     <main class="flex-1 p-4 md:p-6">
@@ -85,7 +66,7 @@
             <div class="iframe-container h-full rounded-lg overflow-hidden">
                 <iframe 
                     class="dashboard-iframe"
-                    src="https://lookerstudio.google.com/embed/reporting/28da2412-8785-49f3-ad95-d9216c642e83/page/p_c5r3npwcvd" 
+                    src="https://lookerstudio.google.com/embed/reporting/41cb1705-eba5-4859-b9c7-1efd1184629c/page/sspUF" 
                     frameborder="0" 
                     style="border:0; min-height: 500px;" 
                     allowfullscreen 
@@ -95,26 +76,7 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-white">
-        <!-- Footer Ticker -->
-        <div class="bg-slate-800 py-2 overflow-hidden">
-            <div class="ticker whitespace-nowrap text-sm text-slate-300">
-                <span class="inline-block px-8">🏗️ Safety First: Always wear proper PPE when working at heights</span>
-                <span class="inline-block px-8">⚠️ AI Safety Tip: Inspect scaffolding daily for loose connections and wear points</span>
-                <span class="inline-block px-8">🔧 Maintenance Alert: Check guardrails and toe boards before each shift</span>
-                <span class="inline-block px-8">👷 Safety Reminder: Three points of contact when climbing scaffolding</span>
-                <span class="inline-block px-8">📋 Compliance: Ensure all scaffolding meets OSHA standards</span>
-            </div>
-        </div>
-        
-        <div class="px-4 py-3">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-sm text-slate-400">
-                <p>&copy; 2024 Site Performance Dashboard. All rights reserved.</p>
-                <p>Scaffolding Safety Lines - AI Generated Content</p>
-            </div>
-        </div>
-    </footer>
+
 
     <script>
         let userTimezone = 'America/New_York';
@@ -132,7 +94,6 @@
             });
             
             document.getElementById('current-time').textContent = timeString;
-            document.getElementById('ticker-time').textContent = timeString;
         }
 
         // Get user's location and fetch weather
@@ -180,7 +141,6 @@
                 userLocation = region ? `${city}, ${region}` : city;
                 
                 document.getElementById('location').textContent = userLocation;
-                updateTicker();
             } catch (error) {
                 console.log('Geocoding failed:', error);
             }
@@ -199,7 +159,6 @@
                     
                     weatherData = { temp: `${temp}°F`, condition };
                     document.getElementById('weather').textContent = `${temp}°F ${condition}`;
-                    updateTicker();
                 }
             } catch (error) {
                 console.log('Weather fetch failed:', error);
@@ -244,8 +203,6 @@
                         await getWeatherData(data.latitude, data.longitude);
                         await getTimezone(data.latitude, data.longitude);
                     }
-                    
-                    updateTicker();
                 }
             } catch (error) {
                 console.log('IP location failed:', error);
@@ -281,19 +238,7 @@
             return conditions[code] || 'Unknown';
         }
 
-        // Update ticker with current data
-        function updateTicker() {
-            const tickerElement = document.querySelector('.ticker');
-            if (tickerElement) {
-                tickerElement.innerHTML = `
-                    <span class="inline-block px-8">📊 Site Performance Dashboard</span>
-                    <span class="inline-block px-8">📍 Current Location: <span id="location">${userLocation}</span></span>
-                    <span class="inline-block px-8">🕐 Local Time: <span id="current-time">--:-- --</span></span>
-                    <span class="inline-block px-8">🌤️ Weather: <span id="weather">${weatherData.temp} ${weatherData.condition}</span></span>
-                    <span class="inline-block px-8">📊 Dashboard Status: Live Data Connected</span>
-                `;
-            }
-        }
+
 
         // Initialize everything
         async function initialize() {
@@ -311,5 +256,5 @@
         // Start when page loads
         initialize();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9700bdfea421e084',t:'MTc1NTM0NTMyMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9700e985c6ee4e3d',t:'MTc1NTM0NzEwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
