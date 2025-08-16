@@ -3,1061 +3,472 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Tracking System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Site Performance Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+            background-color: #fafafa;
+            color: #202124;
+            line-height: 1.4;
+        }
+
+        /* News Ticker Header Styles */
+        .header {
+            background: linear-gradient(90deg, #1a73e8 0%, #4285f4 50%, #1a73e8 100%);
+            color: white;
+            height: 40px;
+            overflow: hidden;
+            position: relative;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .ticker-wrapper {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .ticker-label {
+            background: #ea4335;
+            color: white;
+            padding: 0 16px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .ticker-label::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid #ea4335;
+            border-top: 20px solid transparent;
+            border-bottom: 20px solid transparent;
+        }
+
+        .ticker-content {
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticker-scroll {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            animation: scroll-left 30s linear infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes scroll-left {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 40px;
+            font-size: 13px;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        .ticker-separator {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            margin: 0 16px;
+        }
+
+        .ticker-icon {
+            width: 14px;
+            height: 14px;
+            margin-right: 6px;
+            opacity: 0.9;
+        }
+
+        .dashboard-title {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .loading {
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        /* Main Content */
+        .main-container {
+            position: relative;
+            width: 100%;
+            min-height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            margin: 16px;
+            box-shadow: 0 1px 6px rgba(32,33,36,0.1);
+            overflow: hidden;
+        }
+
+        .dashboard-iframe {
+            width: 100%;
+            height: calc(100vh - 140px);
+            min-height: 600px;
+            border: none;
+            display: block;
+        }
+
+        /* Footer - Large safety reminder to cover Looker Studio's privacy text */
+        .footer {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #e8eaed;
+            border-left: 1px solid #e8eaed;
+            border-radius: 12px 0 0 0;
+            padding: 24px 28px;
+            min-width: 400px;
+            max-width: 500px;
+            min-height: 150px;
+            z-index: 1001;
+            box-shadow: -4px -4px 20px rgba(0,0,0,0.15);
+        }
+
+        .safety-suggestions {
+            font-size: 13px;
+            color: #5f6368;
+            line-height: 1.4;
+            font-weight: 400;
+        }
+
+        .safety-title {
+            font-weight: 600;
+            color: #1a73e8;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .safety-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        #safety-text {
+            padding: 8px 0;
+            line-height: 1.5;
+        }
+
+        /* Enhanced coverage overlay to ensure privacy text is hidden */
+        /* Removed - using larger footer instead */
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header {
+                height: 36px;
+            }
+
+            .ticker-label {
+                padding: 0 12px;
+                font-size: 11px;
+            }
+
+            .ticker-item {
+                font-size: 12px;
+                margin-right: 30px;
+            }
+
+            .ticker-icon {
+                width: 12px;
+                height: 12px;
+            }
+
+            .dashboard-container {
+                margin: 8px;
+                border-radius: 0;
+            }
+
+            .dashboard-iframe {
+                height: calc(100vh - 120px);
+                min-height: 500px;
+            }
+
+            .footer {
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                max-width: none;
+                min-width: auto;
+                min-height: 100px;
+                border-radius: 0;
+                border-left: none;
+                text-align: center;
+                z-index: 1002;
+                padding: 20px 24px;
+            }
+
+            .safety-title {
+                justify-content: center;
+                font-size: 13px;
+            }
+
+            .safety-suggestions {
+                font-size: 12px;
+            }
+
+            /* Removed blank overlay cards for mobile */
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                height: 32px;
+            }
+
+            .ticker-label {
+                padding: 0 8px;
+                font-size: 10px;
+            }
+
+            .ticker-item {
+                font-size: 11px;
+                margin-right: 20px;
+            }
+
+            .ticker-scroll {
+                animation-duration: 25s;
+            }
+        }
+
+        /* Smooth transitions */
+        .header-info,
+        .safety-suggestions {
+            transition: opacity 0.3s ease;
+        }
+
+        /* Removed blank overlay cards - using larger footer instead */
+
+        @media (max-width: 768px) {
+            .main-container::after {
+                width: 100%;
+                height: 60px;
+            }
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <!-- Login Screen -->
-    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Attendance System</h1>
-                <p class="text-gray-600">Supervisor Login</p>
+<body>
+    <header class="header">
+        <div class="ticker-wrapper">
+            <div class="ticker-label">LIVE</div>
+            <div class="ticker-content">
+                <div class="ticker-scroll">
+                    <div class="ticker-item">
+                        <svg class="ticker-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        Hyderabad, India
+                    </div>
+                    <span class="ticker-separator"></span>
+                    <div class="ticker-item">
+                        <svg class="ticker-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        <span id="current-time" class="loading">Loading...</span>
+                    </div>
+                    <span class="ticker-separator"></span>
+                    <div class="ticker-item">
+                        <svg class="ticker-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+                        </svg>
+                        <span id="weather" class="loading">Loading...</span>
+                    </div>
+                    <span class="ticker-separator"></span>
+                    <div class="ticker-item dashboard-title">
+                        📊 Site Performance Dashboard
+                    </div>
+                    <span class="ticker-separator"></span>
+                    <div class="ticker-item">
+                        Real-time Analytics & Monitoring
+                    </div>
+                </div>
             </div>
-            
-            <form id="loginForm" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Supervisor</label>
-                    <select id="supervisorSelect" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Select Supervisor</option>
-                        <option value="MAHENDRA KUMAR">MAHENDRA KUMAR</option>
-                        <option value="PINTU SAH">PINTU SAH</option>
-                        <option value="SUNIL CHAUHAN">SUNIL CHAUHAN</option>
-                        <option value="HARKIRAT SINGH">HARKIRAT SINGH</option>
-                        <option value="NWSUP1">NWSUP1</option>
-                        <option value="NWSUP2">NWSUP2</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">PIN</label>
-                    <input type="password" id="pinInput" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter PIN">
-                </div>
-                
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200">
-                    Login
-                </button>
-            </form>
-            
-            <div id="loginError" class="mt-4 text-red-600 text-sm text-center hidden"></div>
         </div>
-    </div>
+    </header>
 
-    <!-- Main Dashboard -->
-    <div id="dashboard" class="hidden min-h-screen">
-        <!-- Header -->
-        <header class="bg-white shadow-sm border-b">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 gap-3">
-                    <div class="flex-1 min-w-0">
-                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 truncate">Attendance Dashboard</h1>
-                        <p class="text-sm sm:text-base text-gray-600 truncate">Welcome, <span id="currentSupervisor"></span></p>
-                    </div>
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
-                        <span id="currentDate" class="text-xs sm:text-sm text-gray-600"></span>
-                        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition duration-200 text-sm sm:text-base w-full sm:w-auto">
-                            Logout
-                        </button>
-                    </div>
+    <main class="main-container">
+        <div class="dashboard-container">
+            <iframe 
+                class="dashboard-iframe"
+                src="https://lookerstudio.google.com/embed/reporting/28da2412-8785-49f3-ad95-d9216c642e83/page/PwoUF" 
+                frameborder="0" 
+                allowfullscreen 
+                sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+            </iframe>
+        </div>
+        
+        <footer class="footer">
+            <div class="safety-suggestions">
+                <div class="safety-title">
+                    <svg class="safety-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5C15.4,11.66 16,12.56 16,13.5V16.5C16,17.66 15.16,18.5 14,18.5H10C8.84,18.5 8,17.66 8,16.5V13.5C8,12.56 8.6,11.66 9.2,11.5V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.7 10.5,10V11.5H13.5V10C13.5,8.7 12.8,8.2 12,8.2Z"/>
+                    </svg>
+                    Safety Reminder
                 </div>
+                <div id="safety-text">Always ensure proper scaffolding setup, regular inspections, and certified equipment usage to maintain workplace safety standards.</div>
             </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Time Period Selector -->
-            <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
-                <div class="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:items-center">
-                    <h2 class="text-lg font-semibold text-gray-800">Work Progress</h2>
-                    <div class="flex bg-gray-100 rounded-lg p-1 w-full sm:w-auto">
-                        <button id="morningBtn" onclick="setTimePeriod('morning')" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium transition duration-200 bg-blue-600 text-white text-sm sm:text-base">
-                            Morning Check-in
-                        </button>
-                        <button id="measurementBtn" onclick="setTimePeriod('measurement')" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium transition duration-200 text-gray-600 hover:text-gray-800 text-sm sm:text-base">
-                            Measurements
-                        </button>
-                        <button id="eveningBtn" onclick="setTimePeriod('evening')" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium transition duration-200 text-gray-600 hover:text-gray-800 text-sm sm:text-base">
-                            Evening Overtime
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Measurement Entries Section -->
-            <div id="measurementSection" class="bg-white rounded-xl shadow-sm p-6 mb-8 hidden">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Work Measurements</h3>
-                
-                <!-- Add Measurement Form -->
-                <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Work Type</label>
-                            <select id="workType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-                                <option value="erection">Erection</option>
-                                <option value="dismantling">Dismantling</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Length (m)</label>
-                            <input type="number" id="length" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Width (m)</label>
-                            <input type="number" id="width" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Height (m)</label>
-                            <input type="number" id="height" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                            <input type="number" id="quantity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" placeholder="1">
-                        </div>
-                        <div class="flex items-end">
-                            <button onclick="addMeasurement()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
-                                Add Entry
-                            </button>
-                        </div>
-                    </div>
-                    <div class="text-sm text-gray-600">
-                        <span class="font-medium">Calculated Volume: </span>
-                        <span id="calculatedVolume" class="text-blue-600 font-semibold">0.00 m³</span>
-                    </div>
-                </div>
-
-                <!-- Measurements List -->
-                <div id="measurementsList" class="space-y-3 mb-6">
-                    <!-- Measurements will be populated here -->
-                </div>
-
-                <!-- Total Volume -->
-                <div class="bg-blue-50 rounded-lg p-4">
-                    <div class="flex justify-between items-center">
-                        <span class="text-lg font-semibold text-blue-800">Total Volume:</span>
-                        <span id="totalVolume" class="text-2xl font-bold text-blue-600">0.00 m³</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Workers List -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800">Workers List</h3>
-                    <p class="text-sm text-gray-600 mt-1">Click to mark attendance for <span id="timePeriodText">morning check-in</span></p>
-                </div>
-                
-                <div class="divide-y divide-gray-200" id="workersList">
-                    <!-- Workers will be populated here -->
-                </div>
-            </div>
-
-            <!-- Auto-Sync Status -->
-            <div class="mt-8 bg-white rounded-xl shadow-sm p-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2 sm:mb-0">📊 Auto-Sync Status</h3>
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <button onclick="resetAllData()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
-                            🔄 Reset All Data
-                        </button>
-                        <button onclick="submitFinalData()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
-                            ✅ Submit & Reset
-                        </button>
-                    </div>
-                </div>
-                <div id="syncStatus" class="text-sm text-gray-600 mb-2"></div>
-                <div class="bg-gray-50 rounded-lg p-3">
-                    <p class="text-xs text-gray-600">
-                        <strong>Status:</strong> <span id="connectionStatus" class="text-green-600">🟢 Auto-sync enabled</span><br>
-                        <strong>Last Sync:</strong> <span id="lastSyncTime">Never</span>
-                    </p>
-                </div>
-            </div>
-
-            <!-- Reports Section -->
-            <div id="attendanceReportSection" class="mt-8 bg-white rounded-xl shadow-sm p-6 hidden">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Morning Attendance Report</h3>
-                <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                    <pre id="attendanceReportText" class="text-sm text-gray-800 whitespace-pre-wrap font-mono"></pre>
-                </div>
-                <button onclick="shareAttendanceReport()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
-                    📱 Share via WhatsApp
-                </button>
-            </div>
-
-            <div id="summaryReportSection" class="mt-8 bg-white rounded-xl shadow-sm p-6 hidden">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Daily Work Summary Report</h3>
-                <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                    <pre id="summaryReportText" class="text-sm text-gray-800 whitespace-pre-wrap font-mono"></pre>
-                </div>
-                <button onclick="shareSummaryReport()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm font-medium">
-                    📱 Share via WhatsApp
-                </button>
-            </div>
-
-            <!-- Summary -->
-            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <div class="bg-green-50 rounded-xl p-4 sm:p-6">
-                    <h4 class="text-base sm:text-lg font-semibold text-green-800 mb-2">Present Today</h4>
-                    <p class="text-2xl sm:text-3xl font-bold text-green-600" id="presentCount">0</p>
-                </div>
-                <div class="bg-yellow-50 rounded-xl p-4 sm:p-6">
-                    <h4 class="text-base sm:text-lg font-semibold text-yellow-800 mb-2">Overtime Hours</h4>
-                    <p class="text-2xl sm:text-3xl font-bold text-yellow-600" id="overtimeCount">0</p>
-                </div>
-                <div class="bg-blue-50 rounded-xl p-4 sm:p-6">
-                    <h4 class="text-base sm:text-lg font-semibold text-blue-800 mb-2">Total Man Hours</h4>
-                    <p class="text-2xl sm:text-3xl font-bold text-blue-600" id="totalManHours">0</p>
-                </div>
-                <div id="productivityCard" class="rounded-xl p-4 sm:p-6 hidden">
-                    <h4 class="text-base sm:text-lg font-semibold mb-2">Productivity</h4>
-                    <p class="text-2xl sm:text-3xl font-bold mb-2" id="productivityValue">0.00</p>
-                    <p class="text-sm" id="productivityFeedback"></p>
-                </div>
-            </div>
-
-
-        </main>
-    </div>
+        </footer>
+    </main>
 
     <script>
-        // Data
-        const supervisors = {
-            'MAHENDRA KUMAR': 'MAHE01',
-            'PINTU SAH': 'PINT02',
-            'SUNIL CHAUHAN': 'SUNI03',
-            'HARKIRAT SINGH': 'HARK04',
-            'NWSUP1': 'NWSU05',
-            'NWSUP2': 'NWSU06'
-        };
-
-        const workers = [
-            'GURWINDER SINGH', 'P.LAVANYA', 'D SRIRAM KUMAR', 'P.SEETARAM (DRIVER)',
-            'S.KARTHEEK (DRIVER)', 'HARKIRAT', 'MAHENDRA KUMAR', 'SUNIL CHAUHAN',
-            'PINTU KUMAR SAH', 'AMAN KUMAR', 'ATUL MAHADEO', 'CHANDAN KUMAR',
-            'DEEPAK DAS', 'DEEPAK KUMAR', 'DHIRAJ KUMAR MANJI', 'DAULAT YADAV',
-            'FOOL SINGH', 'KIRAN PASWAN', 'KUNDAN KUMAR', 'MITLESH KUMAR',
-            'NIRAJ KUMAR', 'NANDAN KUMAR', 'NARESH KUMAR', 'OM PRAKASH',
-            'PANDURANG', 'RAJU KUMAR', 'ROSHAN CHAUHAN', 'RAM BABU',
-            'RAM KISHOR DAS', 'RAHUL KUMAR', 'SANDIP MADHUKAR', 'SAHAB CHAUHAN',
-            'SARVESH KUMAR', 'SANJITH YADAV', 'SHIVAM KUMAR', 'SUDISH SAH',
-            'VISHAL PRUTHVIRAJ'
-        ];
-
-        let currentTimePeriod = 'morning';
-        let currentSupervisorName = '';
-        let attendanceData = {};
-        let measurementData = {};
-        let dailyMeasurements = [];
-
-        // Google Sheets Integration
-        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzB_CKWgXIz1ucspbpUJpTngXf5mlmWJPn30ZLQ2KG1ol4KjFJxTOLH4AbmtjizTKfs/exec';
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCurrentDate();
-            initializeAttendanceData();
-            loadPersistedData();
-        });
-
-        function updateCurrentDate() {
+        // Update current time for IST (India Standard Time)
+        function updateTime() {
             const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
-        }
-
-        function initializeAttendanceData() {
-            const today = new Date().toDateString();
-            if (!attendanceData[today]) {
-                attendanceData[today] = {};
-                workers.forEach(worker => {
-                    attendanceData[today][worker] = {
-                        present: false,
-                        overtime: false,
-                        overtimeHours: 0,
-                        markedBy: null,
-                        morningTime: null,
-                        eveningTime: null
-                    };
-                });
-            }
-            if (!measurementData[today]) {
-                measurementData[today] = [];
-            }
-        }
-
-        // Data persistence functions
-        function saveDataToStorage() {
-            try {
-                localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
-                localStorage.setItem('measurementData', JSON.stringify(measurementData));
-            } catch (error) {
-                console.error('Error saving data to localStorage:', error);
-            }
-        }
-
-        function loadPersistedData() {
-            try {
-                const savedAttendanceData = localStorage.getItem('attendanceData');
-                const savedMeasurementData = localStorage.getItem('measurementData');
-                
-                if (savedAttendanceData) {
-                    attendanceData = JSON.parse(savedAttendanceData);
-                }
-                if (savedMeasurementData) {
-                    measurementData = JSON.parse(savedMeasurementData);
-                }
-            } catch (error) {
-                console.error('Error loading data from localStorage:', error);
-            }
-        }
-
-        // Login functionality
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const supervisor = document.getElementById('supervisorSelect').value;
-            const pin = document.getElementById('pinInput').value;
-            const errorDiv = document.getElementById('loginError');
-
-            if (!supervisor || !pin) {
-                showError('Please select supervisor and enter PIN');
-                return;
-            }
-
-            if (supervisors[supervisor] === pin) {
-                currentSupervisorName = supervisor;
-                document.getElementById('currentSupervisor').textContent = supervisor;
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
-                renderWorkersList();
-                updateSummary();
-            } else {
-                showError('Invalid supervisor or PIN');
-            }
-        });
-
-        function showError(message) {
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
-            setTimeout(() => {
-                errorDiv.classList.add('hidden');
-            }, 3000);
-        }
-
-        function logout() {
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('supervisorSelect').value = '';
-            document.getElementById('pinInput').value = '';
-            currentSupervisorName = '';
-        }
-
-        function setTimePeriod(period) {
-            currentTimePeriod = period;
-            const morningBtn = document.getElementById('morningBtn');
-            const measurementBtn = document.getElementById('measurementBtn');
-            const eveningBtn = document.getElementById('eveningBtn');
-            const timePeriodText = document.getElementById('timePeriodText');
-            const measurementSection = document.getElementById('measurementSection');
-            const workersList = document.getElementById('workersList').parentElement;
-
-            // Reset all buttons
-            [morningBtn, measurementBtn, eveningBtn].forEach(btn => {
-                btn.classList.remove('bg-blue-600', 'text-white');
-                btn.classList.add('text-gray-600', 'hover:text-gray-800');
-            });
-
-            if (period === 'morning') {
-                morningBtn.classList.add('bg-blue-600', 'text-white');
-                morningBtn.classList.remove('text-gray-600', 'hover:text-gray-800');
-                timePeriodText.textContent = 'morning check-in';
-                measurementSection.classList.add('hidden');
-                workersList.classList.remove('hidden');
-            } else if (period === 'measurement') {
-                measurementBtn.classList.add('bg-blue-600', 'text-white');
-                measurementBtn.classList.remove('text-gray-600', 'hover:text-gray-800');
-                timePeriodText.textContent = 'work measurements';
-                measurementSection.classList.remove('hidden');
-                workersList.classList.add('hidden');
-                renderMeasurements();
-                updateVolumeCalculation();
-            } else {
-                eveningBtn.classList.add('bg-blue-600', 'text-white');
-                eveningBtn.classList.remove('text-gray-600', 'hover:text-gray-800');
-                timePeriodText.textContent = 'evening overtime';
-                measurementSection.classList.add('hidden');
-                workersList.classList.remove('hidden');
-            }
-            
-            if (period !== 'measurement') {
-                renderWorkersList();
-            }
-        }
-
-        function renderWorkersList() {
-            const workersList = document.getElementById('workersList');
-            const today = new Date().toDateString();
-            
-            // Filter workers based on time period and supervisor
-            let workersToShow = [];
-            
-            if (currentTimePeriod === 'morning') {
-                // For morning, show only workers not marked by other supervisors OR marked by current supervisor
-                workersToShow = workers.filter(worker => {
-                    const workerData = attendanceData[today][worker];
-                    return !workerData.markedBy || workerData.markedBy === currentSupervisorName;
-                });
-            } else if (currentTimePeriod === 'evening') {
-                // For evening, only show workers that current supervisor marked as present in morning
-                workersToShow = workers.filter(worker => {
-                    const workerData = attendanceData[today][worker];
-                    return workerData.present && workerData.markedBy === currentSupervisorName;
-                });
-            }
-            
-            if (workersToShow.length === 0) {
-                const message = currentTimePeriod === 'morning' 
-                    ? 'All workers have been assigned to other supervisors'
-                    : 'No workers marked present by you today';
-                const subMessage = currentTimePeriod === 'morning'
-                    ? 'Workers marked by other supervisors are locked'
-                    : 'Switch to morning check-in to mark workers present first';
-                    
-                workersList.innerHTML = `
-                    <div class="p-8 text-center text-gray-500">
-                        <p class="text-lg mb-2">${message}</p>
-                        <p class="text-sm">${subMessage}</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            workersList.innerHTML = workersToShow.map(worker => {
-                const workerData = attendanceData[today][worker];
-                const isMarked = currentTimePeriod === 'morning' ? workerData.present : (workerData.overtimeHours > 0);
-                const isLockedByOther = workerData.markedBy && workerData.markedBy !== currentSupervisorName;
-                const statusClass = isMarked ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50 active:bg-blue-50';
-
-                if (currentTimePeriod === 'morning') {
-                    // Check if worker is locked by another supervisor
-                    if (isLockedByOther) {
-                        return `
-                            <div class="flex items-center justify-between p-4 bg-gray-100 border-gray-300 opacity-60">
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="font-medium text-gray-500 text-sm sm:text-base truncate">${worker}</h4>
-                                    <p class="text-xs sm:text-sm text-gray-500 mt-1">🔒 Assigned to ${workerData.markedBy}</p>
-                                </div>
-                                <span class="px-3 py-2 bg-gray-400 text-white rounded-lg text-xs sm:text-sm font-medium">
-                                    Locked
-                                </span>
-                            </div>
-                        `;
-                    }
-                    
-                    const buttonClass = isMarked ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-blue-600 hover:text-white active:bg-blue-700';
-                    const buttonText = isMarked ? 'Present ✓' : 'Mark Present';
-
-                    return `
-                        <div class="flex items-center justify-between p-4 ${statusClass} transition duration-200">
-                            <div class="flex-1 min-w-0">
-                                <h4 class="font-medium text-gray-900 text-sm sm:text-base truncate">${worker}</h4>
-                                ${isMarked ? `<p class="text-xs sm:text-sm text-gray-600 mt-1">Marked by you at ${workerData.morningTime}</p>` : ''}
-                            </div>
-                            <button 
-                                onclick="toggleAttendance('${worker}')" 
-                                class="px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium transition duration-200 text-xs sm:text-sm whitespace-nowrap ml-3 ${buttonClass}">
-                                ${buttonText}
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    // Evening overtime with manual hours input
-                    return `
-                        <div class="flex items-center justify-between p-4 ${statusClass} transition duration-200">
-                            <div class="flex-1 min-w-0">
-                                <h4 class="font-medium text-gray-900 text-sm sm:text-base truncate">${worker}</h4>
-                                ${workerData.overtimeHours > 0 ? `<p class="text-xs sm:text-sm text-gray-600 mt-1">${workerData.overtimeHours} hours overtime - Marked by you at ${workerData.eveningTime}</p>` : ''}
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <input 
-                                    type="number" 
-                                    id="overtime_${worker.replace(/\s+/g, '_')}" 
-                                    min="0" 
-                                    max="12" 
-                                    step="0.5" 
-                                    value="${workerData.overtimeHours || ''}" 
-                                    placeholder="Hours" 
-                                    class="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <button 
-                                    onclick="setOvertimeHours('${worker}')" 
-                                    class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition duration-200">
-                                    Set
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }
-            }).join('');
-        }
-
-        function toggleAttendance(worker) {
-            const today = new Date().toDateString();
-            const now = new Date().toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+            const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+            const timeString = istTime.toLocaleTimeString('en-IN', {
+                hour: '2-digit',
                 minute: '2-digit',
-                hour12: true 
+                second: '2-digit',
+                hour12: true
             });
-
-            if (currentTimePeriod === 'morning') {
-                attendanceData[today][worker].present = !attendanceData[today][worker].present;
-                if (attendanceData[today][worker].present) {
-                    attendanceData[today][worker].markedBy = currentSupervisorName;
-                    attendanceData[today][worker].morningTime = now;
-                } else {
-                    attendanceData[today][worker].markedBy = null;
-                    attendanceData[today][worker].morningTime = null;
-                }
-            }
-
-            renderWorkersList();
-            updateSummary();
-            saveDataToStorage(); // Save data after attendance change
-            autoSyncToGoogleSheets(); // Auto-sync after attendance change
+            document.getElementById('current-time').textContent = `${timeString} IST`;
         }
 
-        function setOvertimeHours(worker) {
-            const today = new Date().toDateString();
-            const now = new Date().toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            
-            const inputId = `overtime_${worker.replace(/\s+/g, '_')}`;
-            const hoursInput = document.getElementById(inputId);
-            const hours = parseFloat(hoursInput.value) || 0;
-
-            if (hours < 0 || hours > 12) {
-                alert('Please enter overtime hours between 0 and 12');
-                return;
-            }
-
-            attendanceData[today][worker].overtimeHours = hours;
-            attendanceData[today][worker].overtime = hours > 0;
-            
-            if (hours > 0) {
-                attendanceData[today][worker].markedBy = currentSupervisorName;
-                attendanceData[today][worker].eveningTime = now;
-            } else {
-                attendanceData[today][worker].markedBy = null;
-                attendanceData[today][worker].eveningTime = null;
-            }
-
-            renderWorkersList();
-            updateSummary();
-            saveDataToStorage(); // Save data after overtime change
-            autoSyncToGoogleSheets(); // Auto-sync after overtime change
-        }
-
-        function updateVolumeCalculation() {
-            const length = parseFloat(document.getElementById('length').value) || 0;
-            const width = parseFloat(document.getElementById('width').value) || 0;
-            const height = parseFloat(document.getElementById('height').value) || 0;
-            const quantity = parseInt(document.getElementById('quantity').value) || 1;
-            const workType = document.getElementById('workType').value;
-
-            let volume = length * width * height * quantity;
-            if (workType === 'dismantling') {
-                volume = volume / 2;
-            }
-
-            document.getElementById('calculatedVolume').textContent = volume.toFixed(2) + ' m³';
-        }
-
-        function addMeasurement() {
-            const length = parseFloat(document.getElementById('length').value);
-            const width = parseFloat(document.getElementById('width').value);
-            const height = parseFloat(document.getElementById('height').value);
-            const quantity = parseInt(document.getElementById('quantity').value) || 1;
-            const workType = document.getElementById('workType').value;
-
-            if (!length || !width || !height) {
-                alert('Please fill in all measurement fields');
-                return;
-            }
-
-            let volume = length * width * height * quantity;
-            if (workType === 'dismantling') {
-                volume = volume / 2;
-            }
-
-            const measurement = {
-                id: Date.now(),
-                workType,
-                length,
-                width,
-                height,
-                quantity,
-                volume: parseFloat(volume.toFixed(2)),
-                supervisor: currentSupervisorName,
-                timestamp: new Date().toLocaleTimeString()
-            };
-
-            const today = new Date().toDateString();
-            measurementData[today].push(measurement);
-
-            // Clear form
-            document.getElementById('length').value = '';
-            document.getElementById('width').value = '';
-            document.getElementById('height').value = '';
-            document.getElementById('quantity').value = '1';
-            document.getElementById('workType').value = 'erection';
-
-            renderMeasurements();
-            updateVolumeCalculation();
-            updateSummary();
-            saveDataToStorage(); // Save data after measurement added
-            autoSyncToGoogleSheets(); // Auto-sync after measurement added
-        }
-
-        function renderMeasurements() {
-            const today = new Date().toDateString();
-            const measurements = measurementData[today] || [];
-            const measurementsList = document.getElementById('measurementsList');
-
-            if (measurements.length === 0) {
-                measurementsList.innerHTML = '<p class="text-gray-500 text-center py-4">No measurements added yet</p>';
-                document.getElementById('totalVolume').textContent = '0.00 m³';
-                return;
-            }
-
-            let totalVolume = 0;
-            measurementsList.innerHTML = measurements.map(measurement => {
-                totalVolume += measurement.volume;
-                return `
-                    <div class="bg-gray-50 rounded-lg p-4 flex justify-between items-center">
-                        <div class="flex-1">
-                            <div class="flex flex-wrap gap-4 text-sm">
-                                <span class="font-medium ${measurement.workType === 'erection' ? 'text-green-600' : 'text-orange-600'}">
-                                    ${measurement.workType.toUpperCase()}
-                                </span>
-                                <span>L: ${measurement.length}m</span>
-                                <span>W: ${measurement.width}m</span>
-                                <span>H: ${measurement.height}m</span>
-                                <span>Qty: ${measurement.quantity}</span>
-                                <span class="font-semibold text-blue-600">${measurement.volume} m³</span>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-1">Added by ${measurement.supervisor} at ${measurement.timestamp}</p>
-                        </div>
-                        <button onclick="removeMeasurement(${measurement.id})" class="text-red-600 hover:text-red-800 ml-4">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('totalVolume').textContent = totalVolume.toFixed(2) + ' m³';
-        }
-
-        function removeMeasurement(id) {
-            const today = new Date().toDateString();
-            measurementData[today] = measurementData[today].filter(m => m.id !== id);
-            renderMeasurements();
-            updateSummary();
-            saveDataToStorage(); // Save data after measurement removed
-            autoSyncToGoogleSheets(); // Auto-sync after measurement removed
-        }
-
-        function updateSummary() {
-            const today = new Date().toDateString();
-            let presentCount = 0;
-            let totalOvertimeHours = 0;
-
-            workers.forEach(worker => {
-                if (attendanceData[today][worker].present) presentCount++;
-                totalOvertimeHours += attendanceData[today][worker].overtimeHours || 0;
-            });
-
-            // Calculate total man hours: (present workers * 8) + total overtime hours
-            const totalManHours = (presentCount * 8) + totalOvertimeHours;
-
-            document.getElementById('presentCount').textContent = presentCount;
-            document.getElementById('overtimeCount').textContent = totalOvertimeHours.toFixed(1);
-            document.getElementById('totalManHours').textContent = totalManHours;
-
-            // Show attendance report if workers are present
-            if (presentCount > 0) {
-                generateAttendanceReport();
-                document.getElementById('attendanceReportSection').classList.remove('hidden');
-            } else {
-                document.getElementById('attendanceReportSection').classList.add('hidden');
-            }
-
-            // Calculate productivity if measurements exist
-            const measurements = measurementData[today] || [];
-            if (measurements.length > 0 && totalManHours > 0) {
-                let erectionVolume = 0;
-                let dismantlingVolume = 0;
-
-                measurements.forEach(m => {
-                    if (m.workType === 'erection') {
-                        erectionVolume += m.volume;
-                    } else {
-                        dismantlingVolume += m.volume;
-                    }
-                });
-
-                const totalVolume = erectionVolume + dismantlingVolume;
-                const productivity = totalVolume / totalManHours;
-
-                const productivityCard = document.getElementById('productivityCard');
-                const productivityValue = document.getElementById('productivityValue');
-                const productivityFeedback = document.getElementById('productivityFeedback');
-
-                productivityCard.classList.remove('hidden');
-                productivityValue.textContent = productivity.toFixed(2);
-
-                if (productivity < 2.5) {
-                    productivityCard.className = 'bg-red-50 rounded-xl p-4 sm:p-6';
-                    productivityValue.className = 'text-2xl sm:text-3xl font-bold mb-2 text-red-600';
-                    productivityFeedback.className = 'text-sm text-red-800 font-medium';
-                    productivityFeedback.textContent = '⚠️ Low Productivity - Needs Improvement';
-                } else {
-                    productivityCard.className = 'bg-green-50 rounded-xl p-4 sm:p-6';
-                    productivityValue.className = 'text-2xl sm:text-3xl font-bold mb-2 text-green-600';
-                    productivityFeedback.className = 'text-sm text-green-800 font-medium';
-                    productivityFeedback.textContent = '✅ Good Productivity - Keep it up!';
-                }
-
-                // Show summary report if overtime or measurements exist
-                if (totalOvertimeHours > 0 || measurements.length > 0) {
-                    generateSummaryReport();
-                    document.getElementById('summaryReportSection').classList.remove('hidden');
-                }
-            } else {
-                document.getElementById('productivityCard').classList.add('hidden');
-                if (totalOvertimeHours > 0) {
-                    generateSummaryReport();
-                    document.getElementById('summaryReportSection').classList.remove('hidden');
-                } else {
-                    document.getElementById('summaryReportSection').classList.add('hidden');
-                }
-            }
-        }
-
-        function generateAttendanceReport() {
-            const today = new Date().toDateString();
-            const currentDate = new Date().toLocaleDateString('en-GB');
-            const presentWorkers = workers.filter(worker => attendanceData[today][worker].present);
-            
-            let report = `MORNING ATTENDANCE REPORT\n`;
-            report += `===============================\n`;
-            report += `Date: ${currentDate}\n`;
-            report += `Supervisor: ${currentSupervisorName}\n`;
-            report += `Total Present: ${presentWorkers.length} workers\n\n`;
-            report += `PRESENT WORKERS:\n`;
-            report += `-------------------------------\n`;
-            
-            presentWorkers.forEach((worker, index) => {
-                report += `${index + 1}. ${worker}\n`;
-            });
-            
-            report += `\n===============================\n`;
-            report += `Generated at: ${new Date().toLocaleTimeString()}\n`;
-            
-            document.getElementById('attendanceReportText').textContent = report;
-        }
-
-        function generateSummaryReport() {
-            const today = new Date().toDateString();
-            const currentDate = new Date().toLocaleDateString('en-GB');
-            const measurements = measurementData[today] || [];
-            
-            // Calculate totals
-            let erectionVolume = 0;
-            let dismantlingVolume = 0;
-            measurements.forEach(m => {
-                if (m.workType === 'erection') {
-                    erectionVolume += m.volume;
-                } else {
-                    dismantlingVolume += m.volume;
-                }
-            });
-            
-            const totalVolume = erectionVolume + dismantlingVolume;
-            const presentCount = workers.filter(w => attendanceData[today][w].present).length;
-            const totalOvertimeHours = workers.reduce((sum, w) => sum + (attendanceData[today][w].overtimeHours || 0), 0);
-            const totalManHours = (presentCount * 8) + totalOvertimeHours;
-            const productivity = totalManHours > 0 ? (totalVolume / totalManHours).toFixed(2) : '0.00';
-            
-            let report = `DAILY WORK SUMMARY REPORT\n`;
-            report += `===============================\n`;
-            report += `Date: ${currentDate}\n`;
-            report += `Supervisor: ${currentSupervisorName}\n\n`;
-            
-            report += `MANPOWER SUMMARY:\n`;
-            report += `-------------------------------\n`;
-            report += `Present Workers: ${presentCount}\n`;
-            report += `Total Overtime Hours: ${totalOvertimeHours.toFixed(1)}\n`;
-            report += `Total Man Hours: ${totalManHours}\n\n`;
-            
-            if (totalOvertimeHours > 0) {
-                report += `OVERTIME WORKERS:\n`;
-                report += `-------------------------------\n`;
-                let overtimeIndex = 1;
-                workers.forEach(worker => {
-                    const workerData = attendanceData[today][worker];
-                    if (workerData.overtimeHours > 0) {
-                        report += `${overtimeIndex}. ${worker}: ${workerData.overtimeHours} hours\n`;
-                        overtimeIndex++;
-                    }
-                });
-                report += `\n`;
-            }
-            
-            if (measurements.length > 0) {
-                report += `WORK COMPLETED:\n`;
-                report += `-------------------------------\n`;
-                report += `Total Erection: ${erectionVolume.toFixed(2)} m³\n`;
-                report += `Total Dismantling: ${dismantlingVolume.toFixed(2)} m³\n`;
-                report += `Total Volume: ${totalVolume.toFixed(2)} m³\n\n`;
-                
-                report += `PRODUCTIVITY:\n`;
-                report += `-------------------------------\n`;
-                report += `Productivity Rate: ${productivity} m³/hour\n`;
-                report += `Performance: ${parseFloat(productivity) >= 2.5 ? 'Good' : 'Needs Improvement'}\n\n`;
-            }
-            
-            report += `===============================\n`;
-            report += `Generated at: ${new Date().toLocaleTimeString()}\n`;
-            
-            document.getElementById('summaryReportText').textContent = report;
-        }
-
-        function shareAttendanceReport() {
-            const reportText = document.getElementById('attendanceReportText').textContent;
-            const encodedText = encodeURIComponent(reportText);
-            const whatsappUrl = `https://wa.me/?text=${encodedText}`;
-            window.open(whatsappUrl, '_blank');
-        }
-
-        function shareSummaryReport() {
-            const reportText = document.getElementById('summaryReportText').textContent;
-            const encodedText = encodeURIComponent(reportText);
-            const whatsappUrl = `https://wa.me/?text=${encodedText}`;
-            window.open(whatsappUrl, '_blank');
-        }
-
-        // Auto-Sync Functions
-        let syncInProgress = false;
-        let syncQueue = false;
-
-        async function autoSyncToGoogleSheets() {
-            // Prevent multiple simultaneous syncs
-            if (syncInProgress) {
-                syncQueue = true;
-                return;
-            }
-
-            syncInProgress = true;
-            const syncStatus = document.getElementById('syncStatus');
-            const connectionStatus = document.getElementById('connectionStatus');
-            
-            syncStatus.textContent = '🔄 Auto-syncing...';
-            syncStatus.className = 'text-sm text-blue-600 mb-2';
-
+        // Get Hyderabad weather specifically
+        async function getHyderabadWeather() {
             try {
-                const today = new Date().toDateString();
+                // Hyderabad coordinates
+                const lat = 17.3850;
+                const lon = 78.4867;
                 
-                // Prepare attendance data
-                const manpowerAttendance = [];
-                workers.forEach(worker => {
-                    const workerData = attendanceData[today][worker];
-                    if (workerData.present || workerData.overtimeHours > 0) {
-                        manpowerAttendance.push({
-                            date: today,
-                            supervisor: currentSupervisorName,
-                            worker: worker,
-                            present: workerData.present ? 'Yes' : 'No',
-                            morningTime: workerData.morningTime || '',
-                            overtimeHours: workerData.overtimeHours || 0,
-                            eveningTime: workerData.eveningTime || '',
-                            regularHours: workerData.present ? 8 : 0,
-                            totalHours: (workerData.present ? 8 : 0) + (workerData.overtimeHours || 0)
-                        });
-                    }
-                });
-
-                // Prepare measurement data
-                const measurements = (measurementData[today] || []).map(measurement => ({
-                    date: today,
-                    supervisor: measurement.supervisor,
-                    workType: measurement.workType,
-                    length: measurement.length,
-                    width: measurement.width,
-                    height: measurement.height,
-                    quantity: measurement.quantity,
-                    volume: measurement.volume,
-                    timestamp: measurement.timestamp
-                }));
-
-                const exportData = {
-                    manpowerAttendance,
-                    measurements
-                };
-
-                // Skip actual sync for now - just simulate success
-                // This prevents the Google Sheets error while keeping the UI functional
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+                // Get weather for Hyderabad using Open-Meteo
+                const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=Asia/Kolkata&temperature_unit=celsius`);
+                const weatherData = await weatherResponse.json();
                 
-                syncStatus.textContent = '✅ Data saved locally';
-                syncStatus.className = 'text-sm text-green-600 mb-2';
-                connectionStatus.textContent = '🟢 Local storage active';
-                connectionStatus.className = 'text-green-600';
-                document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
+                const temp = Math.round(weatherData.current.temperature_2m);
+                const weatherCode = weatherData.current.weather_code;
+                const weatherDescription = getWeatherDescription(weatherCode);
                 
-                // Uncomment below when Google Sheets is properly configured:
-                /*
-                const response = await fetch(GOOGLE_SHEETS_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(exportData)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    syncStatus.textContent = '✅ Synced successfully';
-                    syncStatus.className = 'text-sm text-green-600 mb-2';
-                    connectionStatus.textContent = '🟢 Auto-sync enabled';
-                    connectionStatus.className = 'text-green-600';
-                    document.getElementById('lastSyncTime').textContent = new Date().toLocaleString();
-                } else {
-                    throw new Error(result.error || 'Sync failed');
-                }
-                */
-
+                document.getElementById('weather').textContent = `${temp}°C, ${weatherDescription}`;
+                
             } catch (error) {
-                console.error('Auto-sync error:', error);
-                syncStatus.textContent = '⚠️ Sync failed - will retry';
-                syncStatus.className = 'text-sm text-orange-600 mb-2';
-                connectionStatus.textContent = '🟡 Connection issue';
-                connectionStatus.className = 'text-orange-600';
-            }
-
-            syncInProgress = false;
-
-            // Clear status after 3 seconds
-            setTimeout(() => {
-                syncStatus.textContent = '';
-            }, 3000);
-
-            // Process queued sync if needed
-            if (syncQueue) {
-                syncQueue = false;
-                setTimeout(() => autoSyncToGoogleSheets(), 1000);
+                console.error('Weather error:', error);
+                document.getElementById('weather').textContent = 'Weather Unavailable';
             }
         }
 
-        function resetAllData() {
-            if (confirm('Are you sure you want to reset all today\'s data? This action cannot be undone.')) {
-                const today = new Date().toDateString();
-                
-                // Reset attendance data
-                workers.forEach(worker => {
-                    attendanceData[today][worker] = {
-                        present: false,
-                        overtime: false,
-                        overtimeHours: 0,
-                        markedBy: null,
-                        morningTime: null,
-                        eveningTime: null
-                    };
-                });
+        // Convert weather codes to descriptions
+        function getWeatherDescription(code) {
+            const weatherCodes = {
+                0: 'Clear Sky',
+                1: 'Mainly Clear',
+                2: 'Partly Cloudy',
+                3: 'Overcast',
+                45: 'Foggy',
+                48: 'Rime Fog',
+                51: 'Light Drizzle',
+                53: 'Moderate Drizzle',
+                55: 'Dense Drizzle',
+                61: 'Slight Rain',
+                63: 'Moderate Rain',
+                65: 'Heavy Rain',
+                71: 'Slight Snow',
+                73: 'Moderate Snow',
+                75: 'Heavy Snow',
+                77: 'Snow Grains',
+                80: 'Slight Showers',
+                81: 'Moderate Showers',
+                82: 'Violent Showers',
+                85: 'Slight Snow Showers',
+                86: 'Heavy Snow Showers',
+                95: 'Thunderstorm',
+                96: 'Thunderstorm with Hail',
+                99: 'Heavy Thunderstorm'
+            };
+            
+            return weatherCodes[code] || 'Unknown';
+        }
 
-                // Reset measurement data
-                measurementData[today] = [];
+        // Generate dynamic safety suggestions
+        function generateSafetyText() {
+            const suggestions = [
+                "Always ensure proper scaffolding setup, regular inspections, and certified equipment usage to maintain workplace safety standards.",
+                "Remember to conduct daily safety briefings, use appropriate fall protection, and maintain three points of contact when climbing.",
+                "Verify load capacities, secure all materials properly, and ensure clear communication between team members during operations.",
+                "Check weather conditions, inspect all connections, and maintain proper spacing between scaffold platforms and structures.",
+                "Ensure workers are properly trained, equipment is certified, and emergency procedures are clearly communicated to all personnel.",
+                "Conduct regular safety audits, maintain proper documentation, and ensure all safety equipment is in good working condition.",
+                "Implement proper signage, establish clear work zones, and ensure adequate lighting for all scaffolding operations.",
+                "Verify ground conditions, use appropriate base plates, and ensure scaffolding is level and properly braced at all times."
+            ];
+            
+            const randomIndex = Math.floor(Math.random() * suggestions.length);
+            document.getElementById('safety-text').textContent = suggestions[randomIndex];
+        }
 
-                // Refresh UI
-                renderWorkersList();
-                if (currentTimePeriod === 'measurement') {
-                    renderMeasurements();
-                }
-                updateSummary();
-                saveDataToStorage(); // Save data after reset
+        // Initialize page
+        function init() {
+            updateTime();
+            getHyderabadWeather();
+            generateSafetyText();
+            
+            // Update time every second
+            setInterval(updateTime, 1000);
+            
+            // Update weather every 10 minutes
+            setInterval(getHyderabadWeather, 600000);
+            
+            // Update safety text every 30 seconds
+            setInterval(generateSafetyText, 30000);
+        }
 
-                // Show confirmation
-                const syncStatus = document.getElementById('syncStatus');
-                syncStatus.textContent = '🔄 All data has been reset';
-                syncStatus.className = 'text-sm text-orange-600 mb-2';
-                
+        // Start when page loads
+        window.addEventListener('load', init);
+
+        // Handle iframe loading and ensure footer coverage
+        window.addEventListener('load', () => {
+            const iframe = document.querySelector('.dashboard-iframe');
+            iframe.addEventListener('load', () => {
+                // Ensure footer stays on top after iframe loads
                 setTimeout(() => {
-                    syncStatus.textContent = '';
-                }, 3000);
-            }
-        }
-
-        async function submitFinalData() {
-            const today = new Date().toDateString();
-            const presentCount = workers.filter(w => attendanceData[today][w].present).length;
-            const measurementCount = (measurementData[today] || []).length;
-            
-            if (presentCount === 0 && measurementCount === 0) {
-                alert('No data to submit. Please mark attendance or add measurements first.');
-                return;
-            }
-
-            const confirmMessage = `Final submission will include:\n• ${presentCount} workers marked present\n• ${measurementCount} measurements\n\nAfter submission, all data will be reset. Continue?`;
-            
-            if (confirm(confirmMessage)) {
-                const syncStatus = document.getElementById('syncStatus');
-                syncStatus.textContent = '📤 Final submission in progress...';
-                syncStatus.className = 'text-sm text-blue-600 mb-2';
-
-                // Force final sync
-                await autoSyncToGoogleSheets();
-
-                // Wait a moment then reset
-                setTimeout(() => {
-                    resetAllData();
-                    syncStatus.textContent = '✅ Data submitted and reset successfully!';
-                    syncStatus.className = 'text-sm text-green-600 mb-2';
-                    
-                    setTimeout(() => {
-                        syncStatus.textContent = '';
-                    }, 5000);
-                }, 2000);
-            }
-        }
-
-
-
-        // Add event listeners for real-time volume calculation
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCurrentDate();
-            initializeAttendanceData();
-            
-            ['length', 'width', 'height', 'quantity', 'workType'].forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('input', updateVolumeCalculation);
-                    element.addEventListener('change', updateVolumeCalculation);
-                }
+                    const footer = document.querySelector('.footer');
+                    footer.style.zIndex = '999';
+                }, 500);
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969d90c877c92e88',t:'MTc1NDMwNTM3OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
